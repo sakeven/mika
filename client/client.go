@@ -33,7 +33,7 @@ func handle(c net.Conn) {
 	log.Printf("get connection %s", c.RemoteAddr())
 
 	var cipher = cg.NewCrypto()
-	socks5Sever := ss.NewSocks5TCPRelay(c, cipher)
+	socks5Sever := ss.NewSocks5TCPRelay(c, ":8080", cipher)
 	socks5Sever.Serve()
 }
 

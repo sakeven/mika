@@ -8,13 +8,13 @@ import (
 func Serve(c *Conn) {
 	defer c.Close()
 
-	_, address, err := getAddress(c)
+	raw, address, err := getAddress(c)
 	if err != nil {
-		log.Println(err)
+		log.Printf("Get dest address error %s", err)
 		return
 	}
 
-	// log.Println(raw, address)
+	log.Println(string(raw), address)
 	conn, err := net.Dial("tcp", address)
 	if err != nil {
 		log.Println(err)

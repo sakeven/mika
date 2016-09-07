@@ -11,19 +11,24 @@ const (
 	socksv5 = 0x05
 )
 
+// Socks5TCPRelay as a socks5 server and ss client.
 type Socks5TCPRelay struct {
-	conn   net.Conn
-	cipher *Crypto
-	closed bool
+	conn     net.Conn
+	cipher   *Crypto
+	ssServer string
+	closed   bool
 }
 
-func NewSocks5TCPRelay(conn net.Conn, cipher *Crypto) *Socks5TCPRelay {
+// NewSocks5TCPRelay creates a new Socks5TCPRelay.
+func NewSocks5TCPRelay(conn net.Conn, ssServer string, cipher *Crypto) *Socks5TCPRelay {
 	return &Socks5TCPRelay{
-		conn:   conn,
-		cipher: cipher,
+		conn:     conn,
+		cipher:   cipher,
+		ssServer: ssServer,
 	}
 }
 
+// Serve handles connection between socks5 client and remote addr.
 func (s *Socks5TCPRelay) Serve() (err error) {
 	defer func() {
 		if !s.closed {
@@ -32,8 +37,13 @@ func (s *Socks5TCPRelay) Serve() (err error) {
 	}()
 	s.handShake()
 
-	cmd, rawAddr, _, err := s.parseRequest()
+	cmd, rawAddr, addr, err := s.parseRequest()
+	if err != nil {
+		log.Printf("Parse request error %v\n", err)
+		return
+	}
 
+	log.Printf("parse %d %s %s\n", cmd, string(rawAddr), string(addr))
 	s.reply()
 
 	switch cmd {
@@ -61,6 +71,7 @@ func (s *Socks5TCPRelay) Serve() (err error) {
 // +----+--------+
 // |  1 |   1    |
 // +----+--------+
+// handShake dail handshake between socks5 client and socks5 server.
 func (s *Socks5TCPRelay) handShake() (err error) {
 	raw := make([]byte, 257)
 	if _, err = io.ReadFull(s.conn, raw[:2]); err != nil {
@@ -78,7 +89,7 @@ func (s *Socks5TCPRelay) handShake() (err error) {
 		return
 	}
 
-	// reply
+	// reply to socks5 client
 	_, err = s.conn.Write([]byte{socksv5, 0x00})
 	return
 }
@@ -109,6 +120,7 @@ const (
 	UDP_ASSOCIATE = 0x03
 )
 
+// getCmd gets the cmd requested by socks5 client.
 func (s *Socks5TCPRelay) getCmd() (cmd byte, err error) {
 	raw := make([]byte, 3)
 	if _, err = io.ReadFull(s.conn, raw); err != nil {
@@ -124,12 +136,14 @@ func (s *Socks5TCPRelay) getCmd() (cmd byte, err error) {
 	return
 }
 
+// parseRequest parses socks5 client request.
 func (s *Socks5TCPRelay) parseRequest() (cmd byte, rawAddr []byte, addr string, err error) {
-
-	if cmd, err = s.getCmd(); err != nil {
+	cmd, err = s.getCmd()
+	if err != nil {
 		return
 	}
 
+	// check cmd type
 	switch cmd {
 	case CONNECT:
 	case BIND:
@@ -178,9 +192,11 @@ func (s *Socks5TCPRelay) reply() (err error) {
 }
 
 // connect handles CONNECT cmd
+// Here is a bit magic. It acts as a ss client that redirects conntion to ss server.
 func (s *Socks5TCPRelay) connect(rawAddr []byte) (err error) {
 
-	ss, err := DailWithRawAddr("tcp", rawAddr, ":8080", s.cipher)
+	// TODO Dail("tcp", rawAdd) would be more reasonable.
+	ss, err := DailWithRawAddr("tcp", rawAddr, s.ssServer, s.cipher)
 	if err != nil {
 		return
 	}
@@ -188,7 +204,7 @@ func (s *Socks5TCPRelay) connect(rawAddr []byte) (err error) {
 	defer func() {
 		if !s.closed {
 			err := ss.Close()
-			log.Println(err)
+			log.Printf("Close connection error %v\n", err)
 		}
 	}()
 

@@ -21,6 +21,8 @@ func tcp() {
 		log.Fatal(err)
 	}
 
+	log.Printf("Listen on 8080\n")
+
 	for {
 		c, err := nl.Accept()
 		if err != nil {

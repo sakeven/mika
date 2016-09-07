@@ -6,12 +6,14 @@ import (
 	"net"
 )
 
+// Conn dails connection between ss server and ss client.
 type Conn struct {
 	*Crypto
 	net.Conn
 }
 
 func NewConn(conn net.Conn, crypto *Crypto) *Conn {
+
 	return &Conn{
 		Conn:   conn,
 		Crypto: crypto,
