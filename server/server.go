@@ -1,27 +1,29 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net"
 
 	"github.com/sakeven/ssng/ss"
+	"github.com/sakeven/ssng/utils"
 )
 
-var cg = ss.NewCryptoGenerate("aes-128-cfb", "123456")
+var conf *utils.Conf
 
-func handle(c net.Conn) {
+func handle(c net.Conn, cg *ss.CryptoGenerate) {
 	ssConn := ss.NewConn(c, cg.NewCrypto())
 	ss.Serve(ssConn)
 }
 
-func tcp() {
-
-	nl, err := net.Listen("tcp", ":8080")
+func Listen(serverInfo *utils.ServerConf) {
+	nl, err := net.Listen("tcp", fmt.Sprintf("%s:%d", serverInfo.Address, serverInfo.Port))
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	log.Printf("Listen on 8080\n")
+	log.Printf("Listen on %d\n", serverInfo.Port)
+	cg := ss.NewCryptoGenerate(serverInfo.Method, serverInfo.Password)
 
 	for {
 		c, err := nl.Accept()
@@ -31,11 +33,17 @@ func tcp() {
 		}
 
 		go func() {
-			handle(c)
+			handle(c, cg)
 		}()
 	}
 }
 
 func main() {
-	tcp()
+	conf = utils.ParseSeverConf()
+
+	//TODO check conf
+
+	for _, serverInfo := range conf.Server {
+		Listen(serverInfo)
+	}
 }
