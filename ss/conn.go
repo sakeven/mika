@@ -14,6 +14,7 @@ type Conn struct {
 	readBuf  []byte
 }
 
+// NewConn creates a new shadowsocks connection.
 func NewConn(conn net.Conn, crypto *Crypto) *Conn {
 	return &Conn{
 		Conn:     conn,
@@ -23,6 +24,8 @@ func NewConn(conn net.Conn, crypto *Crypto) *Conn {
 	}
 }
 
+// Close closes connection and releases buf.
+// TODO check close state to avoid close twice.
 func (c *Conn) Close() error {
 	leakyBuf.Put(c.writeBuf)
 	leakyBuf.Put(c.readBuf)
@@ -42,6 +45,7 @@ func DailWithRawAddr(network string, rawAddr []byte, server string, cipher *Cryp
 	return
 }
 
+// Write writes data to connection.
 func (c *Conn) Write(b []byte) (n int, err error) {
 	// buf = [iv] + [encrypt data]
 	// [iv] exists only at beginning of connection, else [iv] is empty.
@@ -62,6 +66,9 @@ func (c *Conn) Write(b []byte) (n int, err error) {
 
 	bufLen := len(buf)
 	Debugf("dataLen %d bufLen %d", dataLen, bufLen)
+
+	// It may never occurs. Because we write only rawAddr at the beginning of connection,
+	// which length plus iv length is always less than bufLen.
 	if dataLen > bufLen {
 		Errorf("dataLen large than buflen")
 	}
@@ -70,6 +77,7 @@ func (c *Conn) Write(b []byte) (n int, err error) {
 	return c.Conn.Write(buf[:dataLen])
 }
 
+// Read reads data from connection.
 func (c *Conn) Read(b []byte) (n int, err error) {
 	if c.dec == nil {
 		iv := make([]byte, c.info.ivLen)
