@@ -1,7 +1,6 @@
 package ss
 
 import (
-	"log"
 	"net"
 )
 
@@ -10,14 +9,14 @@ func Serve(c *Conn) {
 
 	raw, address, err := getAddress(c)
 	if err != nil {
-		log.Printf("Get dest address error %s", err)
+		Errorf("Get dest address error %s", err)
 		return
 	}
 
-	log.Println(string(raw), address)
+	Infof("Here %s %s", string(raw), address)
 	conn, err := net.Dial("tcp", address)
 	if err != nil {
-		log.Println(err)
+		Errorf("Create connection error %s", err)
 		return
 	}
 

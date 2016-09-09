@@ -8,9 +8,11 @@ import (
 func pipe(dst, src net.Conn) {
 	defer func() {
 		dst.Close()
-		src.Close()
 	}()
-	buf := make([]byte, 1024)
+
+	buf := make([]byte, 4096)
+	// 	var buf = leakyBuf.Get()
+	// defer leakyBuf.Put(buf)
 
 	var rerr, werr error
 	var n int

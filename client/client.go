@@ -1,27 +1,25 @@
 package main
 
 import (
-	"log"
 	"net"
 
 	"github.com/sakeven/ssng/ss"
 )
 
-var cg = ss.NewCryptoGenerate("aes-128-cfb", "123456")
+var cg = ss.NewCryptoGenerate("aes-256-cfb", "password")
 
 func tcp() {
-
 	nl, err := net.Listen("tcp", ":1080")
 	if err != nil {
-		log.Fatal(err)
+		ss.Panicf("%s", err)
 	}
 	defer nl.Close()
 
-	log.Println("listen 1080")
+	ss.Infof("Client listen on :1080")
 	for {
 		c, err := nl.Accept()
 		if err != nil {
-			log.Println(err)
+			ss.Errorf("Local connection accept error %s", err)
 			continue
 		}
 		go handle(c)
@@ -30,10 +28,10 @@ func tcp() {
 }
 
 func handle(c net.Conn) {
-	log.Printf("get connection %s", c.RemoteAddr())
+	ss.Infof("Get local connection from %s", c.RemoteAddr())
 
 	var cipher = cg.NewCrypto()
-	socks5Sever := ss.NewSocks5TCPRelay(c, ":8080", cipher)
+	socks5Sever := ss.NewSocks5TCPRelay(c, "localhost:8080", cipher)
 	socks5Sever.Serve()
 }
 

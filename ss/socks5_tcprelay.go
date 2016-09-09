@@ -3,7 +3,6 @@ package ss
 import (
 	"fmt"
 	"io"
-	"log"
 	"net"
 )
 
@@ -39,11 +38,11 @@ func (s *Socks5TCPRelay) Serve() (err error) {
 
 	cmd, rawAddr, addr, err := s.parseRequest()
 	if err != nil {
-		log.Printf("Parse request error %v\n", err)
+		Errorf("Parse request error %v\n", err)
 		return
 	}
 
-	log.Printf("parse %d %s %s\n", cmd, string(rawAddr), string(addr))
+	Infof("Proxy connection to %s\n", string(addr))
 	s.reply()
 
 	switch cmd {
@@ -204,7 +203,7 @@ func (s *Socks5TCPRelay) connect(rawAddr []byte) (err error) {
 	defer func() {
 		if !s.closed {
 			err := ss.Close()
-			log.Printf("Close connection error %v\n", err)
+			Errorf("Close connection error %v\n", err)
 		}
 	}()
 

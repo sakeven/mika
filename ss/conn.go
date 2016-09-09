@@ -10,14 +10,24 @@ import (
 type Conn struct {
 	*Crypto
 	net.Conn
+	writeBuf []byte
+	readBuf  []byte
 }
 
 func NewConn(conn net.Conn, crypto *Crypto) *Conn {
-
 	return &Conn{
-		Conn:   conn,
-		Crypto: crypto,
+		Conn:     conn,
+		Crypto:   crypto,
+		writeBuf: leakyBuf.Get(),
+		readBuf:  leakyBuf.Get(),
 	}
+}
+
+func (c *Conn) Close() error {
+	leakyBuf.Put(c.writeBuf)
+	leakyBuf.Put(c.readBuf)
+	Debugf("Connection closed")
+	return c.Conn.Close()
 }
 
 func DailWithRawAddr(network string, rawAddr []byte, server string, cipher *Crypto) (ss net.Conn, err error) {
@@ -33,20 +43,30 @@ func DailWithRawAddr(network string, rawAddr []byte, server string, cipher *Cryp
 }
 
 func (c *Conn) Write(b []byte) (n int, err error) {
-	var buf = make([]byte, 30*1024)
-	var cipher = buf
+	// buf = [iv] + [encrypt data]
+	// [iv] exists only at beginning of connection, else [iv] is empty.
+	// var buf = make([]byte, 30*1024)
+	var buf = c.writeBuf
+	// 	var buf = leakyBuf.Get()
+	// defer leakyBuf.Put(buf)
+	var encryptData = buf
 
 	dataLen := len(b)
 
 	if c.enc == nil {
-		var iv []byte
-		c.enc, iv = c.newEncStream()
+		iv := c.initEncStream()
 		copy(buf, iv)
-		cipher = buf[c.info.ivLen:]
+		encryptData = buf[c.info.ivLen:]
 		dataLen += c.info.ivLen
 	}
 
-	c.Encrypt(cipher, b)
+	bufLen := len(buf)
+	Debugf("dataLen %d bufLen %d", dataLen, bufLen)
+	if dataLen > bufLen {
+		Errorf("dataLen large than buflen")
+	}
+
+	c.encrypt(encryptData, b)
 	return c.Conn.Write(buf[:dataLen])
 }
 
@@ -56,15 +76,18 @@ func (c *Conn) Read(b []byte) (n int, err error) {
 		if _, err := io.ReadFull(c.Conn, iv); err != nil {
 			return 0, err
 		}
-		c.dec = c.newDecStream(iv)
+		c.initDecStream(iv)
 	}
 
-	buf := make([]byte, 30*1024)
+	// buf := make([]byte, 30*1024)
+	var buf = c.readBuf
+	// 	var buf = leakyBuf.Get()
+	// defer leakyBuf.Put(buf)
 	n, err = c.Conn.Read(buf[:len(b)])
 	if err != nil {
 		return
 	}
 
-	c.Decrypt(b, buf[:n])
+	c.decrypt(b, buf[:n])
 	return
 }

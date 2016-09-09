@@ -1,42 +1,46 @@
 package ss
 
 import (
-	"crypto/cipher"
-	"crypto/rand"
-	"io"
 	// "log"
+	"reflect"
 	"testing"
 )
 
-func Test_evpBytesToKey(t *testing.T) {
-	b := evpBytesToKey("123456", 16)
-	dest := []byte{225, 10, 220, 57, 73, 186, 89, 171, 190, 86, 224, 87, 242, 15, 136, 62}
-	if string(b) != string(dest) {
-		t.Errorf("Get error")
+func TestEvpBytesToKey(t *testing.T) {
+	key := evpBytesToKey("foobar", 32)
+	keyTarget := []byte{0x38, 0x58, 0xf6, 0x22, 0x30, 0xac, 0x3c, 0x91, 0x5f, 0x30, 0x0c, 0x66, 0x43, 0x12, 0xc6, 0x3f, 0x56, 0x83, 0x78, 0x52, 0x96, 0x14, 0xd2, 0x2d, 0xdb, 0x49, 0x23, 0x7d, 0x2f, 0x60, 0xbf, 0xdf}
+	if !reflect.DeepEqual(key, keyTarget) {
+		t.Errorf("key not correct\n\texpect: %v\n\tgot:   %v\n", keyTarget, key)
 	}
 }
 
-var cipherKey = make([]byte, 64)
-var cipherIv = make([]byte, 64)
-
-func init() {
-	for i := 0; i < len(cipherKey); i++ {
-		cipherKey[i] = byte(i)
-	}
-	io.ReadFull(rand.Reader, cipherIv)
-}
-
-func benchmarkCipherInit(b *testing.B, method string) {
-	ci := cryptoInfoMap[method]
-	key := cipherKey[:ci.keyLen]
-	block := ci.newBlock(key)
-
-	iv := make([]byte, ci.ivLen)
+func Benchmark_evpBytesToKey(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		cipher.NewCFBEncrypter(block, iv)
+		evpBytesToKey("foobar", 32)
 	}
 }
 
-func BenchmarkAES256Init(b *testing.B) {
-	benchmarkCipherInit(b, "aes-256-cfb")
+func benchmarkCipherEncInit(b *testing.B, method string) {
+	cg := NewCryptoGenerate(method, "password")
+	for i := 0; i < b.N; i++ {
+		crypto := cg.NewCrypto()
+		crypto.initEncStream()
+	}
+}
+
+func BenchmarkAES256EncInit(b *testing.B) {
+	benchmarkCipherEncInit(b, "aes-256-cfb")
+}
+
+func benchmarkCipherDecInit(b *testing.B, method string) {
+	cg := NewCryptoGenerate(method, "password")
+	iv := make([]byte, cg.info.ivLen)
+	for i := 0; i < b.N; i++ {
+		crypto := cg.NewCrypto()
+		crypto.initDecStream(iv)
+	}
+}
+
+func BenchmarkAES256DecInit(b *testing.B) {
+	benchmarkCipherDecInit(b, "aes-256-cfb")
 }
