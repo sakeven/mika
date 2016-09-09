@@ -6,13 +6,14 @@ import (
 )
 
 func pipe(dst, src net.Conn) {
+	var buf = leakyBuf.Get()
+
 	defer func() {
+		leakyBuf.Put(buf)
 		dst.Close()
 	}()
 
-	buf := make([]byte, 4096)
-	// 	var buf = leakyBuf.Get()
-	// defer leakyBuf.Put(buf)
+	// buf := make([]byte, 4096)
 
 	var rerr, werr error
 	var n int
