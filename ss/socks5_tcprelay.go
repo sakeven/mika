@@ -195,7 +195,7 @@ func (s *Socks5TCPRelay) reply() (err error) {
 func (s *Socks5TCPRelay) connect(rawAddr []byte) (err error) {
 
 	// TODO Dail("tcp", rawAdd) would be more reasonable.
-	ss, err := DailWithRawAddr("tcp", rawAddr, s.ssServer, s.cipher)
+	ss, err := DailWithRawAddr("tcp", s.ssServer, rawAddr, s.cipher)
 	if err != nil {
 		return
 	}

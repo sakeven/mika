@@ -2,7 +2,6 @@ package ss
 
 import (
 	"io"
-	// "log"
 	"net"
 )
 
@@ -10,8 +9,10 @@ import (
 type Conn struct {
 	*Crypto
 	net.Conn
-	writeBuf []byte
-	readBuf  []byte
+	writeBuf   []byte
+	readBuf    []byte
+	readStart  bool
+	writeStart bool
 }
 
 // NewConn creates a new shadowsocks connection.
@@ -33,7 +34,7 @@ func (c *Conn) Close() error {
 	return c.Conn.Close()
 }
 
-func DailWithRawAddr(network string, rawAddr []byte, server string, cipher *Crypto) (ss net.Conn, err error) {
+func DailWithRawAddr(network string, server string, rawAddr []byte, cipher *Crypto) (ss net.Conn, err error) {
 	conn, err := net.Dial(network, server)
 	if err != nil {
 		return nil, err
@@ -49,28 +50,21 @@ func DailWithRawAddr(network string, rawAddr []byte, server string, cipher *Cryp
 func (c *Conn) Write(b []byte) (n int, err error) {
 	// buf = [iv] + [encrypt data]
 	// [iv] exists only at beginning of connection, else [iv] is empty.
-	// var buf = make([]byte, 30*1024)
 	var buf = c.writeBuf
-	// 	var buf = leakyBuf.Get()
-	// defer leakyBuf.Put(buf)
 	var encryptData = buf
 
 	dataLen := len(b)
 
-	if c.enc == nil {
+	if !c.writeStart {
+		c.writeStart = true
+
+		dataLen += c.info.ivLen
+		if dataLen > len(buf) {
+			buf = make([]byte, dataLen)
+		}
 		iv := c.initEncStream()
 		copy(buf, iv)
 		encryptData = buf[c.info.ivLen:]
-		dataLen += c.info.ivLen
-	}
-
-	bufLen := len(buf)
-	Debugf("dataLen %d bufLen %d", dataLen, bufLen)
-
-	// It may never occurs. Because we write only rawAddr at the beginning of connection,
-	// which length plus iv length is always less than bufLen.
-	if dataLen > bufLen {
-		Errorf("dataLen large than buflen")
 	}
 
 	c.encrypt(encryptData, b)
@@ -79,18 +73,16 @@ func (c *Conn) Write(b []byte) (n int, err error) {
 
 // Read reads data from connection.
 func (c *Conn) Read(b []byte) (n int, err error) {
-	if c.dec == nil {
+	if !c.readStart {
 		iv := make([]byte, c.info.ivLen)
 		if _, err := io.ReadFull(c.Conn, iv); err != nil {
 			return 0, err
 		}
 		c.initDecStream(iv)
+		c.readStart = true
 	}
 
-	// buf := make([]byte, 30*1024)
 	var buf = c.readBuf
-	// 	var buf = leakyBuf.Get()
-	// defer leakyBuf.Put(buf)
 	n, err = c.Conn.Read(buf[:len(b)])
 	if err != nil {
 		return

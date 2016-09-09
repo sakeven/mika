@@ -1,7 +1,6 @@
 package ss
 
 import (
-	// "log"
 	"net"
 )
 
@@ -12,8 +11,6 @@ func pipe(dst, src net.Conn) {
 		leakyBuf.Put(buf)
 		dst.Close()
 	}()
-
-	// buf := make([]byte, 4096)
 
 	var rerr, werr error
 	var n int

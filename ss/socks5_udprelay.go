@@ -69,7 +69,7 @@ func (s *Socks5UDPRelay) parseRequest() (rawAddr []byte, addr string, err error)
 func (s *Socks5UDPRelay) relay(rawAddr []byte) (err error) {
 	cg := NewCryptoGenerate("aes-128-cfb", "123456")
 	cipher := cg.NewCrypto()
-	ss, err := DailWithRawAddr("udp", rawAddr, ":8080", cipher)
+	ss, err := DailWithRawAddr("udp", ":8080", rawAddr, cipher)
 	if err != nil {
 		return
 	}
