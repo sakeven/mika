@@ -55,7 +55,8 @@ func (c *Conn) Write(b []byte) (n int, err error) {
 
 	dataLen := len(b)
 
-	if !c.writeStart {
+	if c.iv == nil {
+		Debugf("Write iv")
 		c.writeStart = true
 
 		dataLen += c.info.ivLen
@@ -65,6 +66,10 @@ func (c *Conn) Write(b []byte) (n int, err error) {
 		iv := c.initEncStream()
 		copy(buf, iv)
 		encryptData = buf[c.info.ivLen:]
+	} else if !c.writeStart {
+		c.initEncStream()
+		Debugf("init enc")
+		c.writeStart = true
 	}
 
 	c.encrypt(encryptData, b)
@@ -73,12 +78,16 @@ func (c *Conn) Write(b []byte) (n int, err error) {
 
 // Read reads data from connection.
 func (c *Conn) Read(b []byte) (n int, err error) {
-	if !c.readStart {
+	if c.iv == nil {
+		Debugf("Read iv")
 		iv := make([]byte, c.info.ivLen)
 		if _, err := io.ReadFull(c.Conn, iv); err != nil {
 			return 0, err
 		}
 		c.initDecStream(iv)
+		c.readStart = true
+	} else if !c.readStart {
+		c.initDecStream(c.iv)
 		c.readStart = true
 	}
 

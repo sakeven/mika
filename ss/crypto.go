@@ -97,6 +97,7 @@ func (c *Crypto) initEncStream() []byte {
 }
 
 func (c *Crypto) initDecStream(iv []byte) {
+	c.iv = iv
 	c.dec = cipher.NewCFBDecrypter(c.block, iv)
 }
 

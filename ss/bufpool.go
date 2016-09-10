@@ -18,6 +18,7 @@ func NewBufPool(size int) *BufPool {
 			buf := make([]byte, size)
 			return buf
 		},
+		size: size,
 	}}
 }
 

@@ -7,6 +7,8 @@ import (
 func Serve(c *Conn) {
 	defer c.Close()
 
+	Infof("Connection from %s", c.RemoteAddr())
+
 	_, address, err := getAddress(c)
 	if err != nil {
 		Errorf("Get dest address error %s", err)
