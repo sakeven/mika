@@ -58,7 +58,7 @@ func (s *Socks5TCPRelay) Serve() (err error) {
 	return
 }
 
-//  version identifier/method selection message
+// version identifier/method selection message
 // +----+----------+----------+
 // |VER | NMETHODS | METHODS  |
 // +----+----------+----------+

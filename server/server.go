@@ -12,8 +12,12 @@ import (
 var conf *utils.Conf
 
 func handle(c net.Conn, cg *ss.CryptoGenerate) {
-	ssConn := ss.NewConn(c, cg.NewCrypto())
-	ss.Serve(ssConn)
+	mikaConn, err := ss.NewMika(c, cg.NewCrypto(), nil)
+	if err != nil {
+		c.Close()
+		return
+	}
+	ss.Serve(mikaConn)
 }
 
 func Listen(serverInfo *utils.ServerConf) {
@@ -44,6 +48,8 @@ func main() {
 	//TODO check conf
 
 	for _, serverInfo := range conf.Server {
+		serverInfo.Password = "password"
+
 		Listen(serverInfo)
 	}
 }

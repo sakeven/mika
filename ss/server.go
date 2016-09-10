@@ -4,14 +4,13 @@ import (
 	"net"
 )
 
-func Serve(c *Conn) {
+func Serve(c *Mika) {
 	defer c.Close()
 
 	Infof("Connection from %s", c.RemoteAddr())
 
-	_, address, err := getAddress(c)
-	if err != nil {
-		Errorf("Get dest address error %s", err)
+	address := c.header.Addr
+	if ban(address) {
 		return
 	}
 
@@ -24,4 +23,9 @@ func Serve(c *Conn) {
 
 	go pipe(conn, c)
 	pipe(c, conn)
+}
+
+// TODO
+func ban(address string) bool {
+	return false
 }

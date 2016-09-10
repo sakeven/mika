@@ -60,12 +60,14 @@ func NewCryptoGenerate(method string, password string) *CryptoGenerate {
 	block := cryptoInfo.newBlock(key)
 
 	return &CryptoGenerate{
+		key:   key,
 		info:  cryptoInfo,
 		block: block}
 }
 
 type CryptoGenerate struct {
 	info  *cryptoInfo
+	key   []byte
 	block cipher.Block
 }
 

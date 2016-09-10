@@ -34,16 +34,21 @@ func (c *Conn) Close() error {
 	return c.Conn.Close()
 }
 
-func DailWithRawAddr(network string, server string, rawAddr []byte, cipher *Crypto) (ss net.Conn, err error) {
-	conn, err := net.Dial(network, server)
-	if err != nil {
-		return nil, err
-	}
+// func DailWithRawAddr(network string, server string, rawAddr []byte, cipher *Crypto) (ss net.Conn, err error) {
+// 	conn, err := net.Dial(network, server)
+// 	if err != nil {
+// 		return nil, err
+// 	}
 
-	ss = NewConn(conn, cipher)
-	_, err = ss.Write(rawAddr)
+// 	ss = NewConn(conn, cipher)
+// 	_, err = ss.Write(rawAddr)
 
-	return
+// 	return
+// }
+
+// Write writes data to connection.
+func (c *Conn) write(b []byte) (n int, err error) {
+	return c.Conn.Write(b)
 }
 
 // Write writes data to connection.
@@ -70,6 +75,11 @@ func (c *Conn) Write(b []byte) (n int, err error) {
 		c.initEncStream()
 		Debugf("init enc")
 		c.writeStart = true
+	}
+
+	if dataLen > len(buf) {
+		buf = make([]byte, dataLen)
+		encryptData = buf
 	}
 
 	c.encrypt(encryptData, b)

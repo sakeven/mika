@@ -4,7 +4,7 @@ ShadowSocks Next Generation :rocket:
 ## Feature
 1. Support socks5 proxy.
 
-## Spec
+## Mika protocol Spec
 
 ### Requset
 ```
@@ -15,9 +15,10 @@ Key used to encrypt data is gengerated by the first part of password.
 --------------------
 | Fixed | Variable |
 --------------------
-
+```
+```
 First block of req data (at least 23 bytes):
-Chunck id is a unix time when requst was going to be sent. Server must verify chunck id.
+Chunk id is a unix time when requst was going to be sent. Server must verify chunk id.
 Protocol claims how to resolve user data.
 ------------------------------------------------------------------------
 | ver | cmd | reverse | protocol | protocol related | chunck id | hamc |
@@ -52,10 +53,11 @@ UDP data forward(0x3)
 |   1   | Variable |   2  |
 ---------------------------
 admin(0x5)
-
-Other chuncks of req data (at least 12 bytes):
-Chunck id should increase one after a chunck was sent/recevied successfully. 
-Server and client should hold same chunck id for the same chunck.
+```
+```
+Other chunks of req data (at least 12 bytes):
+Chunk id should increase one after a chunk was sent/recevied successfully. 
+Server and client should hold same chunk id for the same chunk.
 ------------------------------
 | dateLen | hamc | user data |
 ------------------------------
