@@ -10,7 +10,7 @@ import (
 )
 
 // ------------------------------------------------------------------------
-// | ver | cmd | reverse | protocol | protocol related | chunck id | hamc |
+// | ver | cmd | reverse | protocol | protocol related | chunck id | hmac |
 // ------------------------------------------------------------------------
 // |  1  |  1  |    2    |    1     |      Variable    |    8      | 10   |
 // ------------------------------------------------------------------------
@@ -21,7 +21,7 @@ type header struct {
 	Protocol        byte
 	ProtocolRelated []byte
 	ChunkId         uint64
-	Hamc            []byte
+	Hmac            []byte
 
 	Addr string
 }
@@ -53,14 +53,17 @@ func (h *header) Bytes(iv []byte, key []byte) (hb []byte) {
 	binary.BigEndian.PutUint64(chunkIdBytes, h.ChunkId)
 	hb = append(hb, chunkIdBytes...)
 
-	h.Hamc = HmacSha1(append(iv, key...), hb)
-	hb = append(hb, h.Hamc[:]...)
+	h.Hmac = HmacSha1(append(iv, key...), hb)
+	hb = append(hb, h.Hmac[:]...)
 	// Debugf("%#v chunk id %d", h, h.ChunkId)
 	return
 }
 
 func getHeader(c io.Reader) (*header, error) {
-	raw := make([]byte, 260)
+	// raw := make([]byte, 260)
+	raw := leakyBuf.Get()
+	defer leakyBuf.Put(raw)
+
 	header := new(header)
 
 	io.ReadFull(c, raw[:5])
@@ -95,9 +98,9 @@ func getHeader(c io.Reader) (*header, error) {
 
 	io.ReadFull(c, raw[:18])
 	header.ChunkId = binary.BigEndian.Uint64(raw[:8])
-	header.Hamc = raw[8:18]
+	header.Hmac = raw[8:18]
 
-	return header, nil
+	return header, header.Check()
 }
 
 func (h *header) Check() error {

@@ -8,7 +8,7 @@ import (
 	"net"
 )
 
-// Conn dails connection between ss server and ss client.
+// Mika dails connection between ss server and ss client.
 type Mika struct {
 	*Conn
 	header     *header
@@ -16,8 +16,8 @@ type Mika struct {
 	readBuf    []byte
 }
 
-// NewConn wraps a new shadowsocks connection.
-// Notice, if header is nil, Conn would be on server side othewise client side.
+// NewMika wraps a new Mika connection.
+// Notice, if header is nil, Mika coonection would be on server side otherwise client side.
 func NewMika(conn net.Conn, cipher *Crypto, header *header) (*Mika, error) {
 	ss := &Conn{
 		Conn:     conn,
@@ -34,18 +34,19 @@ func NewMika(conn net.Conn, cipher *Crypto, header *header) (*Mika, error) {
 	}
 
 	if mika.serverSide {
-		// on server side, we should get header first.
+		// On server side, we should get header first.
 		header, err := getHeader(ss)
 		if err != nil {
 			return nil, err
 		}
-		orginHmac := header.Hamc
+		orginHmac := header.Hmac
 		header.Bytes(cipher.iv, cipher.key)
-		if !bytes.Equal(orginHmac, header.Hamc) {
-			return nil, fmt.Errorf("Hmac check failed")
+		if !bytes.Equal(orginHmac, header.Hmac) {
+			return nil, fmt.Errorf("hmac check failed")
 		}
 		mika.header = header
 	} else {
+		// On client side, send header as quickly.
 		iv := cipher.initEncStream()
 		ss.write(iv)
 		data := header.Bytes(cipher.iv, cipher.key)
@@ -78,7 +79,7 @@ func (c *Mika) Write(b []byte) (n int, err error) {
 	dataLen := len(b)
 	if !c.serverSide {
 		// ------------------------------
-		// | dateLen | hamc | user data |
+		// | dateLen | hmac | user data |
 		// ------------------------------
 		// |   2     | 10   | Variable  |
 		// ------------------------------
@@ -93,7 +94,7 @@ func (c *Mika) Write(b []byte) (n int, err error) {
 		}
 
 		Debugf("Send %d data", dataLen-12)
-		// Debugf("Send %d hamc %#v", dataLen-12, hmac)
+		// Debugf("Send %d hmac %#v", dataLen-12, hmac)
 		// Debugf("Data write %#v", b)
 		binary.BigEndian.PutUint16(buf, uint16(dataLen-12))
 		copy(buf[2:12], hmac)
@@ -110,7 +111,7 @@ func (c *Mika) Read(b []byte) (n int, err error) {
 	// dateLen := len(b)
 	if c.serverSide {
 		// ------------------------------
-		// | dateLen | hamc | user data |
+		// | dateLen | hmac | user data |
 		// ------------------------------
 		// |   2     | 10   | Variable  |
 		// ------------------------------
@@ -137,8 +138,8 @@ func (c *Mika) Read(b []byte) (n int, err error) {
 
 		hmac := HmacSha1(append(c.iv, c.key...), b[:dateLen])
 		if !bytes.Equal(hmac, expectedhmac) {
-			Debugf("Hmac %#v mismatch with %#v", hmac, expectedhmac)
-			return 0, fmt.Errorf("Hamc mismatch")
+			Errorf("Hmac %#v mismatch with %#v, remote addr %s", hmac, expectedhmac, c.RemoteAddr())
+			return 0, fmt.Errorf("Hmac mismatch")
 		}
 		// if dateLen > b
 		// we should buffer remains.

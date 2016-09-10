@@ -15,6 +15,7 @@ func handle(c net.Conn, cg *ss.CryptoGenerate) {
 	mikaConn, err := ss.NewMika(c, cg.NewCrypto(), nil)
 	if err != nil {
 		c.Close()
+		ss.Errorf("Create mika connection error %s", err)
 		return
 	}
 	ss.Serve(mikaConn)
