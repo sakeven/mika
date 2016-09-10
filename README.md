@@ -21,7 +21,7 @@ First block of req data (at least 23 bytes):
 Chunk id is a unix time when requst was going to be sent. Server must verify chunk id.
 Protocol claims how to resolve user data.
 ------------------------------------------------------------------------
-| ver | cmd | reverse | protocol | protocol related | chunck id | hamc |
+| ver | cmd | reverse | protocol | protocol related | chunck id | hmac |
 ------------------------------------------------------------------------
 |  1  |  1  |    2    |    1     |      Variable    |    8      | 10   |
 ------------------------------------------------------------------------
@@ -59,7 +59,7 @@ Other chunks of req data (at least 12 bytes):
 Chunk id should increase one after a chunk was sent/recevied successfully. 
 Server and client should hold same chunk id for the same chunk.
 ------------------------------
-| dateLen | hamc | user data |
+| dateLen | hmac | user data |
 ------------------------------
 |   2     | 10   | Variable  |
 ------------------------------
