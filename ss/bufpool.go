@@ -17,9 +17,9 @@ func NewBufPool(size int) *BufPool {
 		New: func() interface{} {
 			buf := make([]byte, size)
 			return buf
-		},
+		}},
 		size: size,
-	}}
+	}
 }
 
 func (bp *BufPool) Get() []byte {
