@@ -84,21 +84,14 @@ func (c *Mika) Write(b []byte) (n int, err error) {
 		// |   2     | 10   | Variable  |
 		// ------------------------------
 		c.header.ChunkId++
-		hmac := HmacSha1(append(c.iv, c.key...), b)
+		// hmac := HmacSha1(append(c.iv, c.key...), b)
 		// len(hmac)+dataLen = 12
 		dataLen += 12
-		if dataLen > leakyBuf.size {
-			buf = make([]byte, dataLen)
-		} else {
-			buf = leakyBuf.Get()
-		}
 
-		Debugf("Send %d data", dataLen-12)
+		Debugf("Send %d data, chunkId %d", dataLen-12, c.header.ChunkId)
 		// Debugf("Send %d hmac %#v", dataLen-12, hmac)
 		// Debugf("Data write %#v", b)
-		binary.BigEndian.PutUint16(buf, uint16(dataLen-12))
-		copy(buf[2:12], hmac)
-		copy(buf[12:], b)
+		buf, _ = otaReqChunkAuth(c.iv, c.header.ChunkId, b)
 		// Debugf("Data after write %#v", buf[12:dataLen])
 	}
 
@@ -125,7 +118,6 @@ func (c *Mika) Read(b []byte) (n int, err error) {
 		copy(expectedhmac, buf[2:datePos])
 
 		Debugf("dataLen %d expected len %d", dateLen, len(b))
-		Debugf("expectedhmac %#v ", expectedhmac)
 
 		if dateLen > len(b) {
 			Errorf("Date len %d large than b %d", dateLen, len(b))
@@ -136,7 +128,10 @@ func (c *Mika) Read(b []byte) (n int, err error) {
 			return 0, err
 		}
 
-		hmac := HmacSha1(append(c.iv, c.key...), b[:dateLen])
+		c.header.ChunkId++
+		Debugf("ChunkId %d expectedhmac %#v ", c.header.ChunkId, expectedhmac)
+
+		_, hmac := otaReqChunkAuth(c.iv, c.header.ChunkId, b[:dateLen])
 		if !bytes.Equal(hmac, expectedhmac) {
 			Errorf("Hmac %#v mismatch with %#v, remote addr %s", hmac, expectedhmac, c.RemoteAddr())
 			return 0, fmt.Errorf("Hmac mismatch")
