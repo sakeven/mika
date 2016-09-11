@@ -2,11 +2,11 @@
 A Faster Secure Proxy :rocket:
 
 ## Feature
-1. Support socks5 proxy.
+1. Support proxy TCP data by socks5 at local.
 1. One time auth against CCA. 
 
 
-## Mika protocol Spec
+## Mika Protocol Spec
 
 ### Requset
 ```
@@ -22,41 +22,41 @@ Key used to encrypt data is gengerated by the first part of password.
 First block of req data (at least 23 bytes):
 Chunk id is a unix time when requst was going to be sent. Server must verify chunk id.
 Protocol claims how to resolve user data.
-Hmac use sha1 as hach func, [iv]+[key] as key, and request header expect hmac as message.
+Hmac use sha1 as hash func, [iv]+[key] as key, and request header expect hmac as message.
 hmac = Hmac(sha1, [iv]+[key], [header])
 ------------------------------------------------------------------------
 | ver | cmd | reverse | protocol | protocol related | chunck id | hmac |
 ------------------------------------------------------------------------
 |  1  |  1  |    2    |    1     |      Variable    |    8      | 10   |
 ------------------------------------------------------------------------
-ver: 0x1
+ver: 0x01
 
 cmd:
-data forward 0x1
-server control 0x2
+data forward 0x01
+server control 0x02
 
-reverse: 0x00
+reverse: 0x0000
 
 protocols:
-TCP data forward(0x1)
+TCP data forward(0x01)
 ---------------------------
 | atype | address  | port |
 ---------------------------
 |   1   | Variable |   2  |
 ---------------------------
-HTTP data forward(0x2)
+HTTP data forward(0x02)
 --------------------
 | protocol related |
 --------------------
 |        0         |
 --------------------
-UDP data forward(0x3)
+UDP data forward(0x03)
 ---------------------------
 | atype |  address | port |
 ---------------------------
 |   1   | Variable |   2  |
 ---------------------------
-admin(0x5)
+admin(0x05)
 ```
 ```
 Other chunks of req data (at least 12 bytes):
