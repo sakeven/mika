@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"flag"
 	"io/ioutil"
-	// "log"
+	"log"
 	// "os"
 )
 
@@ -37,28 +37,33 @@ func ParseSeverConf() *Conf {
 	flag.StringVar(&confFile, "c", "", "path to config file")
 	flag.StringVar(&conf.Server[0].Address, "s", "", "server address")
 	flag.IntVar(&conf.Server[0].Port, "p", 8388, "server port")
-	flag.StringVar(&conf.Server[0].Password, "k", "", "password")
+	flag.StringVar(&conf.Server[0].Password, "k", "password", "password")
 	flag.StringVar(&conf.Server[0].Method, "m", "aes-256-cfb", "encryption method")
 	flag.StringVar(&conf.LocalAddr, "b", "127.0.0.1", "local binding address")
 	flag.IntVar(&conf.LocalPort, "l", 1080, "local port")
 	flag.Int64Var(&conf.Timeout, "t", 300, "timeout in seconds")
 	flag.BoolVar(&conf.TcpFastOpen, "-fast-open", false, "use TCP_FASTOPEN, requires Linux 3.7+")
+	flag.Parse()
 
 	c, err := parseConf(confFile)
 	if err != nil {
+		log.Printf("%s %s", err, confFile)
 		return conf
 	}
 	return c
 }
 
 func parseConf(confFile string) (*Conf, error) {
+	log.Printf("%s", confFile)
+
 	rawConf, err := ioutil.ReadFile(confFile)
 	if err != nil {
 		return nil, err
 	}
+	log.Printf("%s", string(rawConf))
 	v := &Conf{}
 
-	json.Unmarshal(rawConf, v)
-
+	err = json.Unmarshal(rawConf, &v)
+	log.Printf("%s %#v", err, v)
 	return v, nil
 }

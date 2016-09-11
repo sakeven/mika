@@ -49,8 +49,6 @@ func main() {
 	//TODO check conf
 
 	for _, serverInfo := range conf.Server {
-		serverInfo.Password = "password"
-
 		Listen(serverInfo)
 	}
 }

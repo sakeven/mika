@@ -1,2 +1,4 @@
 client/client
+client/client.json
 server/server
+server/server.json
