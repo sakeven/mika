@@ -1,8 +1,6 @@
 package mika
 
 import (
-	"crypto/hmac"
-	"crypto/sha1"
 	"encoding/binary"
 	"fmt"
 	"io"
@@ -27,9 +25,12 @@ type header struct {
 }
 
 const (
-	version     byte = 0x1
-	dataForward byte = 0x1
-	tcpForward  byte = 0x1
+	version     byte = 0x01
+	dataForward byte = 0x01
+
+	tcpForward  byte = 0x01
+	httpForward byte = 0x02
+	udpForward  byte = 0x03
 )
 
 func newHeader(protocol byte, rawAddr []byte) *header {
@@ -114,20 +115,4 @@ func (h *header) Check() error {
 	}
 
 	return nil
-}
-
-func HmacSha1(key []byte, data []byte) []byte {
-	hmacSha1 := hmac.New(sha1.New, key)
-	hmacSha1.Write(data)
-	return hmacSha1.Sum(nil)[:10]
-}
-
-func otaReqChunkAuth(iv []byte, chunkId uint64, data []byte) ([]byte, []byte) {
-	nb := make([]byte, 2)
-	binary.BigEndian.PutUint16(nb, uint16(len(data)))
-	chunkIdBytes := make([]byte, 8)
-	binary.BigEndian.PutUint64(chunkIdBytes, chunkId)
-	hmac := HmacSha1(append(iv, chunkIdBytes...), data)
-	header := append(nb, hmac...)
-	return append(header, data...), hmac
 }
