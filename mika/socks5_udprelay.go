@@ -1,4 +1,4 @@
-package ss
+package mika
 
 import (
 	"fmt"
@@ -69,13 +69,13 @@ func (s *Socks5UDPRelay) parseRequest() (rawAddr []byte, addr string, err error)
 func (s *Socks5UDPRelay) relay(rawAddr []byte) (err error) {
 	cg := NewCryptoGenerate("aes-128-cfb", "123456")
 	cipher := cg.NewCrypto()
-	ss, err := DailWithRawAddr("udp", ":8080", rawAddr, cipher)
+	mika, err := DailWithRawAddr("udp", ":8080", rawAddr, cipher)
 	if err != nil {
 		return
 	}
-	defer ss.Close()
+	defer mika.Close()
 
-	go pipe(s.conn, ss)
-	pipe(ss, s.conn)
+	go pipe(s.conn, mika)
+	pipe(mika, s.conn)
 	return
 }

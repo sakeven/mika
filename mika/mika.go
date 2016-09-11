@@ -1,4 +1,4 @@
-package ss
+package mika
 
 import (
 	"bytes"
@@ -8,7 +8,7 @@ import (
 	"net"
 )
 
-// Mika dails connection between ss server and ss client.
+// Mika dails connection between mika server and mika client.
 type Mika struct {
 	*Conn
 	header     *header

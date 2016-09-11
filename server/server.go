@@ -5,20 +5,20 @@ import (
 	"log"
 	"net"
 
-	"github.com/sakeven/ssng/ss"
-	"github.com/sakeven/ssng/utils"
+	"github.com/sakeven/mika/mika"
+	"github.com/sakeven/mika/utils"
 )
 
 var conf *utils.Conf
 
-func handle(c net.Conn, cg *ss.CryptoGenerate) {
-	mikaConn, err := ss.NewMika(c, cg.NewCrypto(), nil)
+func handle(c net.Conn, cg *mika.CryptoGenerate) {
+	mikaConn, err := mika.NewMika(c, cg.NewCrypto(), nil)
 	if err != nil {
 		c.Close()
-		ss.Errorf("Create mika connection error %s", err)
+		mika.Errorf("Create mika connection error %s", err)
 		return
 	}
-	ss.Serve(mikaConn)
+	mika.Serve(mikaConn)
 }
 
 func Listen(serverInfo *utils.ServerConf) {
@@ -28,7 +28,7 @@ func Listen(serverInfo *utils.ServerConf) {
 	}
 
 	log.Printf("Listen on %d\n", serverInfo.Port)
-	cg := ss.NewCryptoGenerate(serverInfo.Method, serverInfo.Password)
+	cg := mika.NewCryptoGenerate(serverInfo.Method, serverInfo.Password)
 
 	for {
 		c, err := nl.Accept()

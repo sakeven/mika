@@ -1,4 +1,4 @@
-package ss
+package mika
 
 import (
 	"fmt"
@@ -10,7 +10,7 @@ const (
 	socksv5 = 0x05
 )
 
-// Socks5TCPRelay as a socks5 server and ss client.
+// Socks5TCPRelay as a socks5 server and mika client.
 type Socks5TCPRelay struct {
 	conn     net.Conn
 	cipher   *Crypto
@@ -19,11 +19,11 @@ type Socks5TCPRelay struct {
 }
 
 // NewSocks5TCPRelay creates a new Socks5TCPRelay.
-func NewSocks5TCPRelay(conn net.Conn, ssServer string, cipher *Crypto) *Socks5TCPRelay {
+func NewSocks5TCPRelay(conn net.Conn, mikaServer string, cipher *Crypto) *Socks5TCPRelay {
 	return &Socks5TCPRelay{
 		conn:     conn,
 		cipher:   cipher,
-		ssServer: ssServer,
+		ssServer: mikaServer,
 	}
 }
 
@@ -191,24 +191,24 @@ func (s *Socks5TCPRelay) reply() (err error) {
 }
 
 // connect handles CONNECT cmd
-// Here is a bit magic. It acts as a ss client that redirects conntion to ss server.
+// Here is a bit magic. It acts as a mika client that redirects conntion to mika server.
 func (s *Socks5TCPRelay) connect(rawAddr []byte) (err error) {
 
 	// TODO Dail("tcp", rawAdd) would be more reasonable.
-	ss, err := DailWithRawAddr("tcp", s.ssServer, rawAddr, s.cipher)
+	mika, err := DailWithRawAddr("tcp", s.ssServer, rawAddr, s.cipher)
 	if err != nil {
 		return
 	}
 
 	defer func() {
 		if !s.closed {
-			err := ss.Close()
+			err := mika.Close()
 			Errorf("Close connection error %v\n", err)
 		}
 	}()
 
-	go pipe(s.conn, ss)
-	pipe(ss, s.conn)
+	go pipe(s.conn, mika)
+	pipe(mika, s.conn)
 	s.closed = true
 	return
 }

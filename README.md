@@ -1,8 +1,10 @@
-# ssng
-ShadowSocks Next Generation :rocket:
+# Mika
+A Faster Secure Proxy :rocket:
 
 ## Feature
 1. Support socks5 proxy.
+1. One time auth against CCA. 
+
 
 ## Mika protocol Spec
 
@@ -20,6 +22,8 @@ Key used to encrypt data is gengerated by the first part of password.
 First block of req data (at least 23 bytes):
 Chunk id is a unix time when requst was going to be sent. Server must verify chunk id.
 Protocol claims how to resolve user data.
+Hmac use sha1 as hach func, [iv]+[key] as key, and request header expect hmac as message.
+hmac = Hmac(sha1, [iv]+[key], [header])
 ------------------------------------------------------------------------
 | ver | cmd | reverse | protocol | protocol related | chunck id | hmac |
 ------------------------------------------------------------------------
@@ -58,6 +62,8 @@ admin(0x5)
 Other chunks of req data (at least 12 bytes):
 Chunk id should increase one after a chunk was sent/recevied successfully. 
 Server and client should hold same chunk id for the same chunk.
+Hmac use sha1 as hach func, [iv]+[chunk id] as key, and [user data] as message.
+hmac = Hmac(sha1, [iv]+[chunk id], [user data])
 ------------------------------
 | dateLen | hmac | user data |
 ------------------------------
@@ -78,5 +84,4 @@ Key used to encrypt data is gengerated by the last part of password.
 
 ## TODO
 0. Impl full spec.
-1. One time auth against CCA. 
 2. Address forbidden.
