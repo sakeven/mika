@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"flag"
 	"io/ioutil"
-	"log"
+	// "log"
 	// "os"
 )
 
@@ -47,23 +47,19 @@ func ParseSeverConf() *Conf {
 
 	c, err := parseConf(confFile)
 	if err != nil {
-		log.Printf("%s %s", err, confFile)
 		return conf
 	}
 	return c
 }
 
 func parseConf(confFile string) (*Conf, error) {
-	log.Printf("%s", confFile)
 
 	rawConf, err := ioutil.ReadFile(confFile)
 	if err != nil {
 		return nil, err
 	}
-	log.Printf("%s", string(rawConf))
 	v := &Conf{}
 
 	err = json.Unmarshal(rawConf, &v)
-	log.Printf("%s %#v", err, v)
 	return v, nil
 }
