@@ -79,7 +79,7 @@ func (c *Mika) Write(b []byte) (n int, err error) {
 	dataLen := len(b)
 	if !c.serverSide {
 		// ------------------------------
-		// | dateLen | hmac | user data |
+		// | dataLen | hmac | user data |
 		// ------------------------------
 		// |   2     | 10   | Variable  |
 		// ------------------------------
@@ -88,10 +88,11 @@ func (c *Mika) Write(b []byte) (n int, err error) {
 		// len(hmac)+dataLen = 12
 		dataLen += 12
 
-		Debugf("Send %d data, chunkId %d", dataLen-12, c.header.ChunkId)
 		// Debugf("Send %d hmac %#v", dataLen-12, hmac)
 		// Debugf("Data write %#v", b)
-		buf, _ = otaReqChunkAuth(c.iv, c.header.ChunkId, b)
+		var hmac []byte
+		buf, hmac = otaReqChunkAuth(c.iv, c.header.ChunkId, b)
+		Debugf("Send %d data, chunkId %d, hmac %#v", dataLen-12, c.header.ChunkId, hmac)
 		// Debugf("Data after write %#v", buf[12:dataLen])
 	}
 
@@ -101,10 +102,10 @@ func (c *Mika) Write(b []byte) (n int, err error) {
 func (c *Mika) Read(b []byte) (n int, err error) {
 	// recover() avoid panic
 	var buf = c.readBuf
-	// dateLen := len(b)
+	// dataLen := len(b)
 	if c.serverSide {
 		// ------------------------------
-		// | dateLen | hmac | user data |
+		// | dataLen | hmac | user data |
 		// ------------------------------
 		// |   2     | 10   | Variable  |
 		// ------------------------------
@@ -113,32 +114,32 @@ func (c *Mika) Read(b []byte) (n int, err error) {
 			return 0, err
 		}
 
-		dateLen := int(binary.BigEndian.Uint16(buf[:2]))
+		dataLen := int(binary.BigEndian.Uint16(buf[:2]))
 		expectedhmac := make([]byte, 10)
 		copy(expectedhmac, buf[2:datePos])
 
-		Debugf("dataLen %d expected len %d", dateLen, len(b))
+		Debugf("dataLen %d expected len %d", dataLen, len(b))
 
-		if dateLen > len(b) {
-			Errorf("Date len %d large than b %d", dateLen, len(b))
+		if dataLen > len(b) {
+			Errorf("Date len %d large than b %d", dataLen, len(b))
 		}
 
-		if _, err := io.ReadFull(c.Conn, b[:dateLen]); err != nil {
+		if _, err := io.ReadFull(c.Conn, b[:dataLen]); err != nil {
 			Errorf("Read error %s", err)
 			return 0, err
 		}
 
 		c.header.ChunkId++
-		Debugf("ChunkId %d expectedhmac %#v ", c.header.ChunkId, expectedhmac)
+		Debugf("ChunkId %d, receive %d datas, expectedhmac %#v ", c.header.ChunkId, dataLen, expectedhmac)
 
-		_, hmac := otaReqChunkAuth(c.iv, c.header.ChunkId, b[:dateLen])
+		_, hmac := otaReqChunkAuth(c.iv, c.header.ChunkId, b[:dataLen])
 		if !bytes.Equal(hmac, expectedhmac) {
 			Errorf("Hmac %#v mismatch with %#v, remote addr %s", hmac, expectedhmac, c.RemoteAddr())
 			return 0, fmt.Errorf("Hmac mismatch")
 		}
-		// if dateLen > b
+		// if dataLen > b
 		// we should buffer remains.
-		return dateLen, nil
+		return dataLen, nil
 	}
 
 	return c.Conn.Read(b)

@@ -73,7 +73,7 @@ Server and client should hold same chunk id for the same chunk.
 Hmac use sha1 as hach func, [iv]+[chunk id] as key, and [user data] as message.
 hmac = Hmac(sha1, [iv]+[chunk id], [user data])
 ------------------------------
-| dateLen | hmac | user data |
+| dataLen | hmac | user data |
 ------------------------------
 |   2     | 10   | Variable  |
 ------------------------------
