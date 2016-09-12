@@ -122,6 +122,7 @@ func (c *Mika) Read(b []byte) (n int, err error) {
 
 		if dataLen > len(b) {
 			Errorf("Date len %d large than b %d", dataLen, len(b))
+			return 0, fmt.Errorf("Too large data")
 		}
 
 		if _, err := io.ReadFull(c.Conn, b[:dataLen]); err != nil {
