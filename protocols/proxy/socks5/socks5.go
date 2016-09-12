@@ -1,3 +1,4 @@
+// Package socks5 implements socks5 proxy protocol.
 package socks5
 
 import (

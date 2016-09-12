@@ -1,3 +1,4 @@
+// Package protocols defines protocol interface.
 package protocols
 
 type Protocol interface {
@@ -6,6 +7,7 @@ type Protocol interface {
 	Close() error
 }
 
+// Two protocol should be in same layer.
 func Pipe(dst, src Protocol) {
 	// var buf = leakyBuf.Get()
 	var buf = make([]byte, 4096)
