@@ -1,4 +1,4 @@
-client/client
-client/client.json
-server/server
-server/server.json
+cmd/client/client
+cmd/client/client.json
+cmd/server/server
+cmd/server/server.json

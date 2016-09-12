@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/sakeven/mika/mika"
+	"github.com/sakeven/mika/protocols/mika"
 	"github.com/sakeven/mika/utils"
 )
 
@@ -41,20 +41,19 @@ type server struct {
 var servers []*server
 
 func main() {
+
 	conf := utils.ParseSeverConf()
 	for _, s := range conf.Server {
 		se := &server{
 			address: fmt.Sprintf("%s:%d", s.Address, s.Port),
 			cg:      mika.NewCryptoGenerate(s.Method, s.Password),
 		}
-		mika.Debugf("%#v", se)
 		servers = append(servers, se)
 	}
 
 	if len(servers) <= 0 {
-		mika.Panicf("Please configure server")
+		mika.Fatalf("Please configure server")
 	}
 
-	// TODO load servers configure to cache
 	tcpServe(conf)
 }

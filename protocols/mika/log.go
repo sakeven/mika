@@ -8,10 +8,11 @@ type LogLevel int
 
 const (
 	DebugLevel LogLevel = iota
+	PanicLevel
 	InfoLevel
 	WarnLevel
 	ErrorLevel
-	PanicLevel
+	FatalLevel
 )
 
 var logLevel LogLevel
@@ -27,6 +28,12 @@ func SetLevel(level LogLevel) {
 func Debugf(format string, args ...interface{}) {
 	if logLevel <= DebugLevel {
 		log.Printf("[DEBG] "+format, args...)
+	}
+}
+
+func Panicf(format string, args ...interface{}) {
+	if logLevel <= PanicLevel {
+		log.Panicf("[PANC] "+format, args...)
 	}
 }
 
@@ -48,8 +55,8 @@ func Errorf(format string, args ...interface{}) {
 	}
 }
 
-func Panicf(format string, args ...interface{}) {
+func Fatalf(format string, args ...interface{}) {
 	if logLevel <= PanicLevel {
-		log.Printf("[PANC] "+format, args...)
+		log.Fatalf("[FATA] "+format, args...)
 	}
 }
