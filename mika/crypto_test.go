@@ -2,9 +2,21 @@ package mika
 
 import (
 	// "log"
+	"crypto/rand"
+	"io"
 	"reflect"
 	"testing"
 )
+
+var cipherKey = make([]byte, 64)
+var cipherIv = make([]byte, 64)
+
+func init() {
+	for i := 0; i < len(cipherKey); i++ {
+		cipherKey[i] = byte(i)
+	}
+	io.ReadFull(rand.Reader, cipherIv)
+}
 
 func TestEvpBytesToKey(t *testing.T) {
 	key := evpBytesToKey("foobar", 32)
@@ -34,10 +46,9 @@ func BenchmarkAES256EncInit(b *testing.B) {
 
 func benchmarkCipherDecInit(b *testing.B, method string) {
 	cg := NewCryptoGenerate(method, "password")
-	iv := make([]byte, cg.info.ivLen)
 	for i := 0; i < b.N; i++ {
 		crypto := cg.NewCrypto()
-		crypto.initDecStream(iv)
+		crypto.initDecStream(cipherIv[:cg.info.ivLen])
 	}
 }
 
