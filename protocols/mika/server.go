@@ -21,8 +21,8 @@ func Serve(c *Mika) {
 		return
 	}
 
-	go pipe(conn, c)
-	pipe(c, conn)
+	go Pipe(conn, c)
+	Pipe(c, conn)
 }
 
 // TODO

@@ -6,8 +6,25 @@ type Protocol interface {
 	Close() error
 }
 
-type ProtocolStack struct {
-	Proxy    Protocol
-	Mika     Protocol
-	Transfer Protocol
+func Pipe(dst, src Protocol) {
+	// var buf = leakyBuf.Get()
+	var buf = make([]byte, 4096)
+
+	defer func() {
+		// leakyBuf.Put(buf)
+		dst.Close()
+	}()
+
+	var rerr, werr error
+	var n int
+	for {
+		n, rerr = src.Read(buf)
+
+		if n > 0 {
+			_, werr = dst.Write(buf[:n])
+		}
+		if rerr != nil || werr != nil {
+			return
+		}
+	}
 }

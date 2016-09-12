@@ -4,7 +4,7 @@ import (
 	"net"
 )
 
-func pipe(dst, src net.Conn) {
+func Pipe(dst, src net.Conn) {
 	var buf = leakyBuf.Get()
 
 	defer func() {

@@ -75,7 +75,7 @@ func (s *Socks5UDPRelay) relay(rawAddr []byte) (err error) {
 	}
 	defer mika.Close()
 
-	go pipe(s.conn, mika)
-	pipe(mika, s.conn)
+	go Pipe(s.conn, mika)
+	Pipe(mika, s.conn)
 	return
 }

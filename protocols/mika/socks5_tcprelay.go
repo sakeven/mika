@@ -207,8 +207,8 @@ func (s *Socks5TCPRelay) connect(rawAddr []byte) (err error) {
 		}
 	}()
 
-	go pipe(s.conn, mika)
-	pipe(mika, s.conn)
+	go Pipe(s.conn, mika)
+	Pipe(mika, s.conn)
 	s.closed = true
 	return
 }
