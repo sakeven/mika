@@ -14,7 +14,7 @@ func handle(c net.Conn, cg *mika.CryptoGenerate) {
 	mikaConn, err := mika.NewMika(c, cg.NewCrypto(), nil)
 	if err != nil {
 		c.Close()
-		mika.Errorf("Create mika connection error %s", err)
+		utils.Errorf("Create mika connection error %s", err)
 		return
 	}
 	mika.Serve(mikaConn)
@@ -23,16 +23,16 @@ func handle(c net.Conn, cg *mika.CryptoGenerate) {
 func Listen(serverInfo *utils.ServerConf) {
 	nl, err := net.Listen("tcp", fmt.Sprintf("%s:%d", serverInfo.Address, serverInfo.Port))
 	if err != nil {
-		mika.Fatalf("Create server error %s", err)
+		utils.Fatalf("Create server error %s", err)
 	}
 
-	mika.Infof("Listen on %d\n", serverInfo.Port)
+	utils.Infof("Listen on %d\n", serverInfo.Port)
 	cg := mika.NewCryptoGenerate(serverInfo.Method, serverInfo.Password)
 
 	for {
 		c, err := nl.Accept()
 		if err != nil {
-			mika.Errorf("Accept connection error %s", err)
+			utils.Errorf("Accept connection error %s", err)
 			continue
 		}
 

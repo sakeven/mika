@@ -3,6 +3,8 @@ package mika
 import (
 	"io"
 	"net"
+
+	"github.com/sakeven/mika/utils"
 )
 
 // Conn dails connection between ss server and ss client.
@@ -30,7 +32,7 @@ func NewConn(conn net.Conn, crypto *Crypto) *Conn {
 func (c *Conn) Close() error {
 	leakyBuf.Put(c.writeBuf)
 	leakyBuf.Put(c.readBuf)
-	Debugf("Connection closed")
+	utils.Debugf("Connection closed")
 	return c.Conn.Close()
 }
 
@@ -61,7 +63,7 @@ func (c *Conn) Write(b []byte) (n int, err error) {
 	dataLen := len(b)
 
 	if c.iv == nil {
-		Debugf("Write iv")
+		utils.Debugf("Write iv")
 		c.writeStart = true
 
 		dataLen += c.info.ivLen
@@ -73,7 +75,7 @@ func (c *Conn) Write(b []byte) (n int, err error) {
 		encryptData = buf[c.info.ivLen:]
 	} else if !c.writeStart {
 		c.initEncStream()
-		Debugf("init enc")
+		utils.Debugf("init enc")
 		c.writeStart = true
 	}
 
@@ -89,7 +91,7 @@ func (c *Conn) Write(b []byte) (n int, err error) {
 // Read reads data from connection.
 func (c *Conn) Read(b []byte) (n int, err error) {
 	if c.iv == nil {
-		Debugf("Read iv")
+		utils.Debugf("Read iv")
 		iv := make([]byte, c.info.ivLen)
 		if _, err := io.ReadFull(c.Conn, iv); err != nil {
 			return 0, err

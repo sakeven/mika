@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"io"
 	"net"
+
+	"github.com/sakeven/mika/utils"
 )
 
 // Mika dails connection between mika server and mika client.
@@ -88,12 +90,12 @@ func (c *Mika) Write(b []byte) (n int, err error) {
 		// len(hmac)+dataLen = 12
 		dataLen += 12
 
-		// Debugf("Send %d hmac %#v", dataLen-12, hmac)
-		// Debugf("Data write %#v", b)
+		// utils.Debugf("Send %d hmac %#v", dataLen-12, hmac)
+		// utils.Debugf("Data write %#v", b)
 		var hmac []byte
 		buf, hmac = otaReqChunkAuth(c.iv, c.header.ChunkId, b)
-		Debugf("Send %d data, chunkId %d, hmac %#v", dataLen-12, c.header.ChunkId, hmac)
-		// Debugf("Data after write %#v", buf[12:dataLen])
+		utils.Debugf("Send %d data, chunkId %d, hmac %#v", dataLen-12, c.header.ChunkId, hmac)
+		// utils.Debugf("Data after write %#v", buf[12:dataLen])
 	}
 
 	return c.Conn.Write(buf[:dataLen])
@@ -118,24 +120,24 @@ func (c *Mika) Read(b []byte) (n int, err error) {
 		expectedhmac := make([]byte, 10)
 		copy(expectedhmac, buf[2:datePos])
 
-		Debugf("dataLen %d expected len %d", dataLen, len(b))
+		utils.Debugf("dataLen %d expected len %d", dataLen, len(b))
 
 		if dataLen > len(b) {
-			Errorf("Date len %d large than b %d", dataLen, len(b))
+			utils.Errorf("Date len %d large than b %d", dataLen, len(b))
 			return 0, fmt.Errorf("Too large data")
 		}
 
 		if _, err := io.ReadFull(c.Conn, b[:dataLen]); err != nil {
-			Errorf("Read error %s", err)
+			utils.Errorf("Read error %s", err)
 			return 0, err
 		}
 
 		c.header.ChunkId++
-		Debugf("ChunkId %d, receive %d datas, expectedhmac %#v ", c.header.ChunkId, dataLen, expectedhmac)
+		utils.Debugf("ChunkId %d, receive %d datas, expectedhmac %#v ", c.header.ChunkId, dataLen, expectedhmac)
 
 		_, hmac := otaReqChunkAuth(c.iv, c.header.ChunkId, b[:dataLen])
 		if !bytes.Equal(hmac, expectedhmac) {
-			Errorf("Hmac %#v mismatch with %#v, remote addr %s", hmac, expectedhmac, c.RemoteAddr())
+			utils.Errorf("Hmac %#v mismatch with %#v, remote addr %s", hmac, expectedhmac, c.RemoteAddr())
 			return 0, fmt.Errorf("Hmac mismatch")
 		}
 		// if dataLen > b

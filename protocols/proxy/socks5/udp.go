@@ -1,9 +1,13 @@
-package mika
+package socks5
 
 import (
 	"fmt"
 	"io"
 	"net"
+
+	"github.com/sakeven/mika/protocols"
+	"github.com/sakeven/mika/protocols/mika"
+	"github.com/sakeven/mika/utils"
 )
 
 type Socks5UDPRelay struct {
@@ -62,20 +66,20 @@ func (s *Socks5UDPRelay) parseRequest() (rawAddr []byte, addr string, err error)
 		return nil, "", fmt.Errorf("frag %d is not 0, drop it", frag)
 	}
 
-	return getAddress(s.conn)
+	return utils.GetAddress(s.conn)
 }
 
 // relay udp data
 func (s *Socks5UDPRelay) relay(rawAddr []byte) (err error) {
-	cg := NewCryptoGenerate("aes-128-cfb", "123456")
+	cg := mika.NewCryptoGenerate("aes-128-cfb", "123456")
 	cipher := cg.NewCrypto()
-	mika, err := DailWithRawAddr("udp", ":8080", rawAddr, cipher)
+	mikaConn, err := mika.DailWithRawAddr("udp", ":8080", rawAddr, cipher)
 	if err != nil {
 		return
 	}
-	defer mika.Close()
+	defer mikaConn.Close()
 
-	go Pipe(s.conn, mika)
-	Pipe(mika, s.conn)
+	go protocols.Pipe(s.conn, mikaConn)
+	protocols.Pipe(mikaConn, s.conn)
 	return
 }

@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io"
 	"time"
+
+	"github.com/sakeven/mika/utils"
 )
 
 // ------------------------------------------------------------------------
@@ -91,7 +93,7 @@ func getHeader(c io.Reader) (*header, error) {
 	header.Protocol = raw[pos]
 	switch header.Protocol {
 	case tcpForward:
-		header.ProtocolRelated, header.Addr, err = getAddress(c)
+		header.ProtocolRelated, header.Addr, err = utils.GetAddress(c)
 		if err != nil {
 			return nil, err
 		}

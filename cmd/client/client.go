@@ -11,18 +11,18 @@ import (
 func tcpServe(conf *utils.Conf) {
 	nl, err := net.Listen("tcp", fmt.Sprintf(":%d", conf.LocalPort))
 	if err != nil {
-		mika.Panicf("Create server error %s", err)
+		utils.Panicf("Create server error %s", err)
 	}
 	defer nl.Close()
 
-	mika.Infof("Client listen on :%d", conf.LocalPort)
+	utils.Infof("Client listen on :%d", conf.LocalPort)
 	for {
 		c, err := nl.Accept()
 		if err != nil {
-			mika.Errorf("Local connection accept error %s", err)
+			utils.Errorf("Local connection accept error %s", err)
 			continue
 		}
-		mika.Infof("Get local connection from %s", c.RemoteAddr())
+		utils.Infof("Get local connection from %s", c.RemoteAddr())
 		go handle(c)
 	}
 
@@ -52,7 +52,7 @@ func main() {
 	}
 
 	if len(servers) <= 0 {
-		mika.Fatalf("Please configure server")
+		utils.Fatalf("Please configure server")
 	}
 
 	tcpServe(conf)

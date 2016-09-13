@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"io"
 	"net"
+
+	"github.com/sakeven/mika/protocols"
+	"github.com/sakeven/mika/utils"
 )
 
 const (
@@ -38,11 +41,11 @@ func (s *Socks5TCPRelay) Serve() (err error) {
 
 	cmd, rawAddr, addr, err := s.parseRequest()
 	if err != nil {
-		Errorf("Parse request error %v\n", err)
+		utils.Errorf("Parse request error %v\n", err)
 		return
 	}
 
-	Infof("Proxy connection to %s\n", string(addr))
+	utils.Infof("Proxy connection to %s\n", string(addr))
 	s.reply()
 
 	switch cmd {
@@ -152,7 +155,7 @@ func (s *Socks5TCPRelay) parseRequest() (cmd byte, rawAddr []byte, addr string, 
 		return
 	}
 
-	if rawAddr, addr, err = getAddress(s.conn); err != nil {
+	if rawAddr, addr, err = utils.GetAddress(s.conn); err != nil {
 		return
 	}
 
@@ -186,7 +189,7 @@ func (s *Socks5TCPRelay) parseRequest() (cmd byte, rawAddr []byte, addr string, 
 //           o  BND.ADDR       server bound address
 //           o  BND.PORT       server bound port in network octet order
 func (s *Socks5TCPRelay) reply() (err error) {
-	_, err = s.conn.Write([]byte{socksv5, 0x00, 0x00, ipv4Addr, 0x00, 0x00, 0x00, 0x00, 0x10, 0x10})
+	_, err = s.conn.Write([]byte{socksv5, 0x00, 0x00, utils.IPv4Addr, 0x00, 0x00, 0x00, 0x00, 0x10, 0x10})
 	return
 }
 
@@ -203,18 +206,18 @@ func (s *Socks5TCPRelay) connect(rawAddr []byte) (err error) {
 	defer func() {
 		if !s.closed {
 			err := mika.Close()
-			Errorf("Close connection error %v\n", err)
+			utils.Errorf("Close connection error %v\n", err)
 		}
 	}()
 
-	go Pipe(s.conn, mika)
-	Pipe(mika, s.conn)
+	go protocols.Pipe(s.conn, mika)
+	protocols.Pipe(mika, s.conn)
 	s.closed = true
 	return
 }
 
 // udpAssociate handles UDP_ASSOCIATE cmd
 func (s *Socks5TCPRelay) udpAssociate() (err error) {
-	s.conn.Write([]byte{socksv5, 0x00, 0x00, ipv4Addr, 0x00, 0x00, 0x00, 0x00, 0x04, 0x38})
+	s.conn.Write([]byte{socksv5, 0x00, 0x00, utils.IPv4Addr, 0x00, 0x00, 0x00, 0x00, 0x04, 0x38})
 	return
 }
