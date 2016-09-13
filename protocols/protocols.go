@@ -1,9 +1,14 @@
 // Package protocols defines protocol interface.
 package protocols
 
+import (
+	"net"
+)
+
 type Protocol interface {
 	Write(b []byte) (n int, err error)
 	Read(b []byte) (n int, err error)
+	RemoteAddr() net.Addr
 	Close() error
 }
 

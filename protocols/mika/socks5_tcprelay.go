@@ -3,7 +3,7 @@ package mika
 import (
 	"fmt"
 	"io"
-	"net"
+	// "net"
 
 	"github.com/sakeven/mika/protocols"
 	"github.com/sakeven/mika/utils"
@@ -15,14 +15,14 @@ const (
 
 // Socks5TCPRelay as a socks5 server and mika client.
 type Socks5TCPRelay struct {
-	conn     net.Conn
+	conn     protocols.Protocol
 	cipher   *Crypto
 	ssServer string
 	closed   bool
 }
 
 // NewSocks5TCPRelay creates a new Socks5TCPRelay.
-func NewSocks5TCPRelay(conn net.Conn, mikaServer string, cipher *Crypto) *Socks5TCPRelay {
+func NewSocks5TCPRelay(conn protocols.Protocol, mikaServer string, cipher *Crypto) *Socks5TCPRelay {
 	return &Socks5TCPRelay{
 		conn:     conn,
 		cipher:   cipher,

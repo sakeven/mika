@@ -7,6 +7,7 @@ import (
 	"io"
 	"net"
 
+	"github.com/sakeven/mika/protocols"
 	"github.com/sakeven/mika/utils"
 )
 
@@ -20,7 +21,7 @@ type Mika struct {
 
 // NewMika wraps a new Mika connection.
 // Notice, if header is nil, Mika coonection would be on server side otherwise client side.
-func NewMika(conn net.Conn, cipher *Crypto, header *header) (*Mika, error) {
+func NewMika(conn protocols.Protocol, cipher *Crypto, header *header) (*Mika, error) {
 	ss := &Conn{
 		Conn:     conn,
 		Crypto:   cipher,
@@ -65,7 +66,7 @@ func (c *Mika) Close() error {
 	return c.Conn.Close()
 }
 
-func DailWithRawAddr(network string, server string, rawAddr []byte, cipher *Crypto) (net.Conn, error) {
+func DailWithRawAddr(network string, server string, rawAddr []byte, cipher *Crypto) (protocols.Protocol, error) {
 	conn, err := net.Dial(network, server)
 	if err != nil {
 		return nil, err

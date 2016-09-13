@@ -4,13 +4,14 @@ import (
 	"io"
 	"net"
 
+	"github.com/sakeven/mika/protocols"
 	"github.com/sakeven/mika/utils"
 )
 
 // Conn dails connection between ss server and ss client.
 type Conn struct {
 	*Crypto
-	net.Conn
+	Conn       protocols.Protocol
 	writeBuf   []byte
 	readBuf    []byte
 	readStart  bool
@@ -18,13 +19,17 @@ type Conn struct {
 }
 
 // NewConn creates a new shadowsocks connection.
-func NewConn(conn net.Conn, crypto *Crypto) *Conn {
+func NewConn(conn protocols.Protocol, crypto *Crypto) protocols.Protocol {
 	return &Conn{
 		Conn:     conn,
 		Crypto:   crypto,
 		writeBuf: leakyBuf.Get(),
 		readBuf:  leakyBuf.Get(),
 	}
+}
+
+func (c *Conn) RemoteAddr() net.Addr {
+	return c.Conn.RemoteAddr()
 }
 
 // Close closes connection and releases buf.

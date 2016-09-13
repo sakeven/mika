@@ -4,13 +4,14 @@ import (
 	"fmt"
 	"net"
 
+	"github.com/sakeven/mika/protocols"
 	"github.com/sakeven/mika/protocols/mika"
 	"github.com/sakeven/mika/utils"
 )
 
 var conf *utils.Conf
 
-func handle(c net.Conn, cg *mika.CryptoGenerate) {
+func handle(c protocols.Protocol, cg *mika.CryptoGenerate) {
 	mikaConn, err := mika.NewMika(c, cg.NewCrypto(), nil)
 	if err != nil {
 		c.Close()
