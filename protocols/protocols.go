@@ -3,8 +3,6 @@ package protocols
 
 import (
 	"net"
-
-	"github.com/sakeven/mika/utils"
 )
 
 type Protocol interface {

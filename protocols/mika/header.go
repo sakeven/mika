@@ -109,7 +109,7 @@ func getHeader(c io.Reader) (*header, error) {
 }
 
 func (h *header) Check() error {
-	gap := uint64(time.Now().Unix()) - h.ChunkId
+	gap := time.Now().Unix() - int64(h.ChunkId)
 	if gap < 0 {
 		gap = -gap
 	}
