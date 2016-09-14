@@ -6,6 +6,7 @@ import (
 
 	"github.com/sakeven/mika/protocols"
 	"github.com/sakeven/mika/protocols/mika"
+	"github.com/sakeven/mika/protocols/proxy/http"
 	"github.com/sakeven/mika/utils"
 )
 
@@ -32,6 +33,11 @@ func tcpServe(conf *utils.Conf) {
 func handle(c protocols.Protocol) {
 	socks5Sever := mika.NewSocks5TCPRelay(c, servers[0].address, servers[0].cg.NewCrypto())
 	socks5Sever.Serve()
+}
+
+func handleHttp(c protocols.Protocol) {
+	httpSever := http.NewHttpRelay(c, servers[0].address, servers[0].cg.NewCrypto())
+	httpSever.Serve()
 }
 
 type server struct {

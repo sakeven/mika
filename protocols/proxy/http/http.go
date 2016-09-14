@@ -14,13 +14,13 @@ import (
 )
 
 type HttpRelay struct {
-	conn     net.Conn
+	conn     protocols.Protocol
 	cipher   *mika.Crypto
 	ssServer string
 	closed   bool
 }
 
-func NewHttpRelay(conn net.Conn, mikaServer string, cipher *mika.Crypto) *HttpRelay {
+func NewHttpRelay(conn protocols.Protocol, mikaServer string, cipher *mika.Crypto) *HttpRelay {
 	return &HttpRelay{
 		conn:     conn,
 		cipher:   cipher,
@@ -29,9 +29,9 @@ func NewHttpRelay(conn net.Conn, mikaServer string, cipher *mika.Crypto) *HttpRe
 }
 
 // HTTPRelay just send tcp data to mika server.
-func (h *HttpRelay) Serve(rawAddr []byte) {
+func (h *HttpRelay) Serve() {
 	// TODO Set http protoco flag
-	mikaConn, err := mika.DailWithRawAddr("tcp", h.ssServer, rawAddr, h.cipher)
+	mikaConn, err := mika.DailWithRawAddrHttp("tcp", h.ssServer, h.cipher)
 	if err != nil {
 		return
 	}
@@ -49,7 +49,7 @@ func (h *HttpRelay) Serve(rawAddr []byte) {
 }
 
 // In mika server we should parse http request.
-func (h *HttpRelay) Handle(conn protocols.Protocol) {
+func Handle(conn protocols.Protocol) {
 	// TODO Set http protoco flag
 	defer conn.Close()
 

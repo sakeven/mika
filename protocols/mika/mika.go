@@ -76,6 +76,16 @@ func DailWithRawAddr(network string, server string, rawAddr []byte, cipher *Cryp
 	return NewMika(conn, cipher, header)
 }
 
+func DailWithRawAddrHttp(network string, server string, cipher *Crypto) (protocols.Protocol, error) {
+	conn, err := net.Dial(network, server)
+	if err != nil {
+		return nil, err
+	}
+
+	header := newHeader(httpForward, nil)
+	return NewMika(conn, cipher, header)
+}
+
 // Write writes data to connection.
 func (c *Mika) Write(b []byte) (n int, err error) {
 	buf := b
