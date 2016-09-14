@@ -3,6 +3,8 @@ package protocols
 
 import (
 	"net"
+
+	"github.com/sakeven/mika/utils"
 )
 
 type Protocol interface {
@@ -26,10 +28,10 @@ func Pipe(dst, src Protocol) {
 	var n int
 	for {
 		n, rerr = src.Read(buf)
-
 		if n > 0 {
 			_, werr = dst.Write(buf[:n])
 		}
+
 		if rerr != nil || werr != nil {
 			return
 		}

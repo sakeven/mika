@@ -4,6 +4,7 @@ A Faster Secure Proxy :rocket:
 ## Feature
 
 1. Support proxy TCP data by socks5 at local.
+1. Support http/https proxy.
 1. One time auth against CCA. 
 1. Against replay attack.
 1. Transfer speed is super fast.

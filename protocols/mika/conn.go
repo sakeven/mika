@@ -37,7 +37,7 @@ func (c *Conn) RemoteAddr() net.Addr {
 func (c *Conn) Close() error {
 	leakyBuf.Put(c.writeBuf)
 	leakyBuf.Put(c.readBuf)
-	utils.Debugf("Connection closed")
+	utils.Debugf("Connection %s closed", c.RemoteAddr())
 	return c.Conn.Close()
 }
 

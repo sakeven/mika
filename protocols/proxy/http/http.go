@@ -30,7 +30,7 @@ func NewHttpRelay(conn protocols.Protocol, mikaServer string, cipher *mika.Crypt
 
 // HTTPRelay just send tcp data to mika server.
 func (h *HttpRelay) Serve() {
-	// TODO Set http protoco flag
+	// TODO Set http protocol flag
 	mikaConn, err := mika.DailWithRawAddrHttp("tcp", h.ssServer, h.cipher)
 	if err != nil {
 		return
@@ -72,6 +72,7 @@ func Handle(conn protocols.Protocol) {
 var HTTP_200 = []byte("HTTP/1.1 200 Connection Established\r\n\r\n")
 
 func HttpsHandler(conn protocols.Protocol, req *http.Request) {
+	utils.Infof("Dail with request %v %v \n", req.Method, req.URL.Host)
 
 	remote, err := net.Dial("tcp", req.URL.Host) //建立服务端和代理服务器的tcp连接
 	if err != nil {
@@ -82,8 +83,8 @@ func HttpsHandler(conn protocols.Protocol, req *http.Request) {
 
 	conn.Write(HTTP_200)
 
-	protocols.Pipe(conn, remote)
-	go protocols.Pipe(remote, conn)
+	go protocols.Pipe(conn, remote)
+	protocols.Pipe(remote, conn)
 
 }
 
