@@ -3,6 +3,8 @@ package protocols
 
 import (
 	"net"
+
+	"github.com/sakeven/mika/utils"
 )
 
 type Protocol interface {
@@ -14,11 +16,10 @@ type Protocol interface {
 
 // Two protocols should be in same layer.
 func Pipe(dst, src Protocol) {
-	// var buf = leakyBuf.Get()
-	var buf = make([]byte, 4096)
+	var buf = utils.GetBuf()
 
 	defer func() {
-		// leakyBuf.Put(buf)
+		utils.PutBuf(buf)
 		dst.Close()
 	}()
 

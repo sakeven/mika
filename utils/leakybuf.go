@@ -4,9 +4,6 @@ import (
 	"sync"
 )
 
-var defaultBufSize = 4096
-var leakyBuf = NewBufPool(defaultBufSize)
-
 type BufPool struct {
 	pool *sync.Pool
 	size int
@@ -28,4 +25,15 @@ func (bp *BufPool) Get() []byte {
 
 func (bp *BufPool) Put(buf []byte) {
 	bp.pool.Put(buf)
+}
+
+var defaultBufSize = 4096
+var leakyBuf = NewBufPool(defaultBufSize)
+
+func GetBuf() []byte {
+	return leakyBuf.Get()
+}
+
+func PutBuf(buf []byte) {
+	leakyBuf.Put(buf)
 }
