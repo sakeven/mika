@@ -44,39 +44,6 @@ func Listen(serverInfo *utils.ServerConf) {
 	}
 }
 
-func ListenHttp(serverInfo *utils.ServerConf) {
-	nl, err := net.Listen("tcp", fmt.Sprintf("%s:%d", serverInfo.Address, serverInfo.Port))
-	if err != nil {
-		utils.Fatalf("Create server error %s", err)
-	}
-
-	utils.Infof("Listen on %d\n", serverInfo.Port)
-	cg := mika.NewCryptoGenerate(serverInfo.Method, serverInfo.Password)
-
-	for {
-		c, err := nl.Accept()
-		if err != nil {
-			utils.Errorf("Accept connection error %s", err)
-			continue
-		}
-
-		go func() {
-			handleHttp(c, cg)
-		}()
-	}
-}
-
-func handleHttp(c protocols.Protocol, cg *mika.CryptoGenerate) {
-	mikaConn, err := mika.NewMika(c, cg.NewCrypto(), nil)
-	if err != nil {
-		c.Close()
-		utils.Errorf("Create mika connection error %s", err)
-		return
-	}
-
-	http.Handle(mikaConn)
-}
-
 func main() {
 	conf = utils.ParseSeverConf()
 
