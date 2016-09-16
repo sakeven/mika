@@ -76,13 +76,13 @@ func DailWithRawAddr(network string, server string, rawAddr []byte, cipher *Cryp
 	return NewMika(conn, cipher, header)
 }
 
-func DailWithRawAddrHttp(network string, server string, cipher *Crypto) (protocols.Protocol, error) {
+func DailWithRawAddrHttp(network string, server string, rawAddr []byte, cipher *Crypto) (protocols.Protocol, error) {
 	conn, err := net.Dial(network, server)
 	if err != nil {
 		return nil, err
 	}
 
-	header := newHeader(httpForward, nil)
+	header := newHeader(httpForward, rawAddr)
 	return NewMika(conn, cipher, header)
 }
 
