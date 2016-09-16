@@ -24,3 +24,7 @@ See [Mika Protocol Spec](https://github.com/sakeven/mika/wiki/Mika-Protocol-Spec
 
 0. Impl full spec.
 2. Address forbidden.
+
+## LICENSE
+
+In MIT LICENSE
