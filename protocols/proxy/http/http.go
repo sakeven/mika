@@ -4,12 +4,8 @@ import (
 	// "fmt"
 	// "io"
 	"bufio"
-	"encoding/binary"
-	"net"
 	"net/http"
 	"net/http/httputil"
-	"strconv"
-	"strings"
 
 	"github.com/sakeven/mika/protocols"
 	"github.com/sakeven/mika/protocols/mika"
@@ -42,7 +38,7 @@ func (h *HttpRelay) Serve() {
 	}
 
 	// TODO Set http protocol flag
-	mikaConn, err := mika.DailWithRawAddrHttp("tcp", h.ssServer, ToAddr(req.URL.Host), h.cipher)
+	mikaConn, err := mika.DailWithRawAddrHttp("tcp", h.ssServer, utils.ToAddr(req.URL.Host), h.cipher)
 	if err != nil {
 		return
 	}
@@ -63,42 +59,6 @@ func (h *HttpRelay) Serve() {
 	go protocols.Pipe(h.conn, mikaConn)
 	protocols.Pipe(mikaConn, h.conn)
 	h.closed = true
-}
-
-func ToAddr(host string) []byte {
-	if strings.Index(host, ":") < 0 {
-		host += ":80"
-	}
-
-	addr, port, err := net.SplitHostPort(host) //stats.g.doubleclick.net:443
-	if err != nil {
-		return nil
-	}
-	addrBytes := make([]byte, 0)
-	ip := net.ParseIP(addr)
-
-	if ip == nil {
-		l := len(addr)
-		addrBytes = append(addrBytes, utils.DomainAddr)
-		addrBytes = append(addrBytes, byte(l))
-		addrBytes = append(addrBytes, []byte(addr)...)
-	} else if len(ip) == 4 {
-		addrBytes = append(addrBytes, utils.IPv4Addr)
-		addrBytes = append(addrBytes, []byte(ip)...)
-	} else if len(ip) == 16 {
-		addrBytes = append(addrBytes, utils.IPv6Addr)
-		addrBytes = append(addrBytes, []byte(ip)...)
-	}
-	p, err := strconv.Atoi(port)
-	if err != nil {
-		return nil
-	}
-
-	bp := make([]byte, 2)
-	binary.BigEndian.PutUint16(bp, uint16(p))
-
-	addrBytes = append(addrBytes, bp...)
-	return addrBytes
 }
 
 // In mika server we should parse http request.

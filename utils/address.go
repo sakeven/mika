@@ -6,6 +6,7 @@ import (
 	"io"
 	"net"
 	"strconv"
+	"strings"
 )
 
 const (
@@ -78,4 +79,40 @@ func GetAddress(c io.Reader) (raw []byte, addr string, err error) {
 	port := int(binary.BigEndian.Uint16(rawAddr[rawAddrLen-portLen:]))
 
 	return raw[:pos], net.JoinHostPort(host, strconv.Itoa(port)), nil
+}
+
+func ToAddr(addr string) []byte {
+	if strings.Index(addr, ":") < 0 {
+		addr += ":80"
+	}
+
+	host, port, err := net.SplitHostPort(addr) //stats.g.doubleclick.net:443
+	if err != nil {
+		return nil
+	}
+	addrBytes := make([]byte, 0)
+	ip := net.ParseIP(host)
+
+	if ip == nil {
+		l := len(host)
+		addrBytes = append(addrBytes, DomainAddr)
+		addrBytes = append(addrBytes, byte(l))
+		addrBytes = append(addrBytes, []byte(host)...)
+	} else if len(ip) == 4 {
+		addrBytes = append(addrBytes, IPv4Addr)
+		addrBytes = append(addrBytes, []byte(ip)...)
+	} else if len(ip) == 16 {
+		addrBytes = append(addrBytes, IPv6Addr)
+		addrBytes = append(addrBytes, []byte(ip)...)
+	}
+	p, err := strconv.Atoi(port)
+	if err != nil {
+		return nil
+	}
+
+	bp := make([]byte, 2)
+	binary.BigEndian.PutUint16(bp, uint16(p))
+
+	addrBytes = append(addrBytes, bp...)
+	return addrBytes
 }
