@@ -7,7 +7,12 @@
             "method": "aes-256-cfb"
         }
     ],
-    "local_addr": "127.0.0.1",
-    "local_port": 1080,
+    "local": [
+        {
+            "address": "127.0.0.1",
+            "port": 1080,
+            "protocol": "socks5"
+        }
+    ] ,
     "timeout": 300
 }

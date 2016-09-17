@@ -4,8 +4,7 @@ import (
 	"encoding/json"
 	"flag"
 	"io/ioutil"
-	// "log"
-	// "os"
+	"os"
 )
 
 type ServerConf struct {
@@ -15,10 +14,15 @@ type ServerConf struct {
 	Method   string `json:"method"`
 }
 
+type LocalConf struct {
+	Address  string `json:"address"`
+	Port     int    `json:"port"`
+	Protocol string `json:"protocol"`
+}
+
 type Conf struct {
 	Server      []*ServerConf `json:"server"`
-	LocalAddr   string        `json:"local_addr"`
-	LocalPort   int           `json:"local_port"`
+	Local       []*LocalConf  `json:"local"`
 	Timeout     int64         `json:"timeout"`
 	TcpFastOpen bool          `json:"tcp_fastopen"`
 }
@@ -27,23 +31,33 @@ func newConf() *Conf {
 	c := &Conf{}
 	c.Server = make([]*ServerConf, 1)
 	c.Server[0] = new(ServerConf)
+	c.Local = make([]*LocalConf, 1)
+	c.Local[0] = new(LocalConf)
 	return c
 }
 
 func ParseSeverConf() *Conf {
 	var confFile string
 	var conf = newConf()
+	var help bool
 
 	flag.StringVar(&confFile, "c", "", "path to config file")
 	flag.StringVar(&conf.Server[0].Address, "s", "", "server address")
 	flag.IntVar(&conf.Server[0].Port, "p", 8388, "server port")
 	flag.StringVar(&conf.Server[0].Password, "k", "password", "password")
 	flag.StringVar(&conf.Server[0].Method, "m", "aes-256-cfb", "encryption method")
-	flag.StringVar(&conf.LocalAddr, "b", "127.0.0.1", "local binding address")
-	flag.IntVar(&conf.LocalPort, "l", 1080, "local port")
+	conf.Local[0].Protocol = "socks5"
+	flag.StringVar(&conf.Local[0].Address, "b", "127.0.0.1", "local binding address")
+	flag.IntVar(&conf.Local[0].Port, "l", 1080, "local port")
 	flag.Int64Var(&conf.Timeout, "t", 300, "timeout in seconds")
-	flag.BoolVar(&conf.TcpFastOpen, "-fast-open", false, "use TCP_FASTOPEN, requires Linux 3.7+")
+	flag.BoolVar(&help, "-help", false, "print usage")
+	// flag.BoolVar(&conf.TcpFastOpen, "-fast-open", false, "use TCP_FASTOPEN, requires Linux 3.7+")
 	flag.Parse()
+
+	if help {
+		flag.Usage()
+		os.Exit(0)
+	}
 
 	c, err := parseConf(confFile)
 	if err != nil {
@@ -53,7 +67,6 @@ func ParseSeverConf() *Conf {
 }
 
 func parseConf(confFile string) (*Conf, error) {
-
 	rawConf, err := ioutil.ReadFile(confFile)
 	if err != nil {
 		return nil, err
