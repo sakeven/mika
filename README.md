@@ -20,7 +20,7 @@ A Faster Secure Proxy :rocket:
 
 See [Mika Protocol Spec](https://github.com/sakeven/mika/wiki/Mika-Protocol-Spec)
 
-## Config
+## Configuration
 ### Client
 ```
 Usage of client:
@@ -43,7 +43,7 @@ Usage of client:
   -t int
     	timeout in seconds (default 300)
 ```
-### server
+### Server
 
 ```
 Usage of server:
@@ -62,12 +62,14 @@ Usage of server:
   -t int
     	timeout in seconds (default 300)
 ```
+### Configuration via Config File
+See [Configuration via Config File](https://github.com/sakeven/mika/wiki/Configuration-via-Config-File)
 
 
 ## TODO
 
 0. Impl full spec.
-2. Address forbidden.
+1. Address forbidden.
 
 ## LICENSE
 
