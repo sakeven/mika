@@ -4,7 +4,6 @@ import (
 	// "fmt"
 	// "io"
 	"bufio"
-	"net"
 	"net/http"
 	"net/http/httputil"
 
@@ -28,10 +27,18 @@ func NewHttpRelay(conn protocols.Protocol, mikaServer string, cipher *mika.Crypt
 	}
 }
 
-// HTTPRelay just send tcp data to mika server.
+// HTTPRelay parse data and then send to mika server.
 func (h *HttpRelay) Serve() {
+
+	bf := bufio.NewReader(h.conn)
+	req, err := http.ReadRequest(bf)
+	if err != nil {
+		utils.Errorf("Read request error %s", err)
+		return
+	}
+
 	// TODO Set http protocol flag
-	mikaConn, err := mika.DailWithRawAddrHttp("tcp", h.ssServer, h.cipher)
+	mikaConn, err := mika.DailWithRawAddrHttp("tcp", h.ssServer, utils.ToAddr(req.URL.Host), h.cipher)
 	if err != nil {
 		return
 	}
@@ -43,6 +50,12 @@ func (h *HttpRelay) Serve() {
 		}
 	}()
 
+	if req.Method == "CONNECT" {
+		HttpsHandler(h.conn)
+	} else {
+		HttpHandler(mikaConn, req)
+	}
+
 	go protocols.Pipe(h.conn, mikaConn)
 	protocols.Pipe(mikaConn, h.conn)
 	h.closed = true
@@ -50,57 +63,20 @@ func (h *HttpRelay) Serve() {
 
 // In mika server we should parse http request.
 func Handle(conn protocols.Protocol) {
-	// TODO Set http protoco flag
 	defer conn.Close()
-
-	bf := bufio.NewReader(conn)
-	req, err := http.ReadRequest(bf)
-	if err != nil {
-		utils.Errorf("Read request error %s", err)
-		return
-	}
-
-	if req.Method == "CONNECT" {
-		HttpsHandler(conn, req)
-		return
-	}
-
-	HttpHandler(conn, req)
-	// h.closed = true
 }
 
 var HTTP_200 = []byte("HTTP/1.1 200 Connection Established\r\n\r\n")
 
-func HttpsHandler(conn protocols.Protocol, req *http.Request) {
-	utils.Infof("Dail with request %v %v \n", req.Method, req.URL.Host)
-
-	remote, err := net.Dial("tcp", req.URL.Host) //建立服务端和代理服务器的tcp连接
-	if err != nil {
-		utils.Errorf("Failed to connect %v\n", req.RequestURI)
-		// http.Error(rw, "Failed", http.StatusBadGateway)
-		return
-	}
-
-	conn.Write(HTTP_200)
-
-	go protocols.Pipe(conn, remote)
-	protocols.Pipe(remote, conn)
-
+func HttpsHandler(client protocols.Protocol) {
+	client.Write(HTTP_200)
 }
 
 func HttpHandler(conn protocols.Protocol, req *http.Request) {
 	utils.Infof("Sending request %v %v \n", req.Method, req.URL.Host)
 
 	rmProxyHeaders(req)
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		utils.Errorf("%v", err)
-		// http.Error(rw, err.Error(), 500)
-		return
-	}
-	defer resp.Body.Close()
-
-	dump, err := httputil.DumpResponse(resp, true)
+	dump, err := httputil.DumpRequest(req, true)
 	if err != nil {
 		utils.Fatalf("%s", err)
 	}

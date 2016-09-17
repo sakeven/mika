@@ -20,10 +20,56 @@ A Faster Secure Proxy :rocket:
 
 See [Mika Protocol Spec](https://github.com/sakeven/mika/wiki/Mika-Protocol-Spec)
 
+## Configuration
+### Client
+```
+Usage of client:
+  --help
+    	print usage
+  -b string
+    	local binding address (default "127.0.0.1")
+  -c string
+    	path to config file
+  -k string
+    	password (default "password")
+  -l int
+    	local port (default 1080)
+  -m string
+    	encryption method (default "aes-256-cfb")
+  -p int
+    	server port (default 8388)
+  -s string
+    	server address
+  -t int
+    	timeout in seconds (default 300)
+```
+### Server
+
+```
+Usage of server:
+  --help
+    	print usage
+  -c string
+    	path to config file
+  -k string
+    	password (default "password")
+  -m string
+    	encryption method (default "aes-256-cfb")
+  -p int
+    	server port (default 8388)
+  -s string
+    	server address
+  -t int
+    	timeout in seconds (default 300)
+```
+### Configuration via Config File
+See [Configuration via Config File](https://github.com/sakeven/mika/wiki/Configuration-via-Config-File)
+
+
 ## TODO
 
 0. Impl full spec.
-2. Address forbidden.
+1. Address forbidden.
 
 ## LICENSE
 

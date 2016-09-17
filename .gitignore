@@ -1,4 +1,3 @@
 cmd/client/client
-cmd/client/client.json
 cmd/server/server
-cmd/server/server.json
+*.json*

@@ -10,14 +10,23 @@ import (
 	"github.com/sakeven/mika/utils"
 )
 
-func tcpServe(conf *utils.Conf) {
-	nl, err := net.Listen("tcp", fmt.Sprintf(":%d", conf.LocalPort))
+func tcpServe(localConf *utils.LocalConf) {
+	nl, err := net.Listen("tcp", fmt.Sprintf("%s:%d", localConf.Address, localConf.Port))
 	if err != nil {
-		utils.Panicf("Create server error %s", err)
+		utils.Fatalf("Create server error %s", err)
 	}
 	defer nl.Close()
 
-	utils.Infof("Client listen on :%d", conf.LocalPort)
+	utils.Infof("Client listen on %s://%s:%d", localConf.Protocol, localConf.Address, localConf.Port)
+
+	var handleFunc func(c protocols.Protocol)
+	switch localConf.Protocol {
+	case "http":
+		handleFunc = handleHttp
+	case "socks5":
+		handleFunc = handleSocks5
+	}
+
 	for {
 		c, err := nl.Accept()
 		if err != nil {
@@ -25,12 +34,12 @@ func tcpServe(conf *utils.Conf) {
 			continue
 		}
 		utils.Infof("Get local connection from %s", c.RemoteAddr())
-		go handle(c)
+		go handleFunc(c)
 	}
 
 }
 
-func handle(c protocols.Protocol) {
+func handleSocks5(c protocols.Protocol) {
 	socks5Sever := mika.NewSocks5TCPRelay(c, servers[0].address, servers[0].cg.NewCrypto())
 	socks5Sever.Serve()
 }
@@ -62,5 +71,7 @@ func main() {
 		utils.Fatalf("Please configure server")
 	}
 
-	tcpServe(conf)
+	for _, localConf := range conf.Local {
+		tcpServe(localConf)
+	}
 }

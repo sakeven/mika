@@ -92,13 +92,13 @@ func getHeader(c io.Reader) (*header, error) {
 	var err error
 	header.Protocol = raw[pos]
 	switch header.Protocol {
-	case tcpForward:
+	case tcpForward, httpForward:
 		header.ProtocolRelated, header.Addr, err = utils.GetAddress(c)
 		if err != nil {
 			return nil, err
 		}
-	case httpForward:
-		header.ProtocolRelated = nil
+		// case httpForward:
+		// 	header.ProtocolRelated = nil
 	}
 
 	io.ReadFull(c, raw[:18])
