@@ -6,7 +6,6 @@ import (
 
 	"github.com/sakeven/mika/protocols"
 	"github.com/sakeven/mika/protocols/mika"
-	"github.com/sakeven/mika/protocols/proxy/http"
 	"github.com/sakeven/mika/utils"
 )
 
