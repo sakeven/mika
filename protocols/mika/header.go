@@ -63,6 +63,7 @@ func (h *header) Bytes(iv []byte, key []byte) (hb []byte) {
 }
 
 func getHeader(c io.Reader) (*header, error) {
+
 	// raw := make([]byte, 260)
 	raw := leakyBuf.Get()
 	defer leakyBuf.Put(raw)
@@ -71,10 +72,12 @@ func getHeader(c io.Reader) (*header, error) {
 
 	io.ReadFull(c, raw[:5])
 
+	// !!MUST record errors, and return first error after parse header.
+	var errs []error
 	// get version
 	pos := 0
 	if header.Ver = raw[pos]; header.Ver != version {
-		return nil, fmt.Errorf("error mika version %d", header.Ver)
+		errs = append(errs, fmt.Errorf("error mika version %d", header.Ver))
 	}
 	pos++
 
@@ -82,7 +85,8 @@ func getHeader(c io.Reader) (*header, error) {
 	switch header.Cmd {
 	case dataForward:
 	default:
-		return nil, fmt.Errorf("error mika cmd %d", header.Cmd)
+		errs = append(errs, fmt.Errorf("error mika cmd %d", header.Cmd))
+		header.Cmd = dataForward
 	}
 	pos++
 
@@ -95,7 +99,7 @@ func getHeader(c io.Reader) (*header, error) {
 	case tcpForward, httpForward:
 		header.ProtocolRelated, header.Addr, err = utils.GetAddress(c)
 		if err != nil {
-			return nil, err
+			errs = append(errs, fmt.Errorf("error mika cmd %d", header.Cmd))
 		}
 		// case httpForward:
 		// 	header.ProtocolRelated = nil
@@ -105,6 +109,9 @@ func getHeader(c io.Reader) (*header, error) {
 	header.ChunkId = binary.BigEndian.Uint64(raw[:8])
 	header.Hmac = raw[8:18]
 
+	if len(errs) > 0 {
+		return nil, errs[0]
+	}
 	return header, header.Check()
 }
 

@@ -46,6 +46,7 @@ func GetAddress(c io.Reader) (raw []byte, addr string, err error) {
 	pos := 1
 	atyp := raw[:pos]
 	io.ReadFull(c, atyp)
+	var errs []error
 
 	var rawAddrLen = 0
 	switch atyp[0] {
@@ -59,7 +60,12 @@ func GetAddress(c io.Reader) (raw []byte, addr string, err error) {
 	case IPv6Addr:
 		rawAddrLen = ipv6Len + portLen
 	default:
-		return nil, "", fmt.Errorf("unknow address type %d", atyp[0])
+		errs = append(errs, fmt.Errorf("unknow address type %d", atyp[0]))
+		//treat ad domain
+		dmLen := raw[pos : pos+1]
+		pos++
+		io.ReadFull(c, dmLen)
+		rawAddrLen = int(dmLen[0] + portLen)
 	}
 
 	rawAddr := raw[pos : pos+rawAddrLen]
@@ -77,6 +83,10 @@ func GetAddress(c io.Reader) (raw []byte, addr string, err error) {
 	}
 
 	port := int(binary.BigEndian.Uint16(rawAddr[rawAddrLen-portLen:]))
+
+	if len(errs) > 0 {
+		return nil, "", errs[0]
+	}
 
 	return raw[:pos], net.JoinHostPort(host, strconv.Itoa(port)), nil
 }
