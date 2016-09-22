@@ -28,7 +28,7 @@ func Serve(c *Mika) {
 	protocols.Pipe(c, conn)
 }
 
-func TcpServe(c *Mika) {
+func TCPServe(c *Mika) {
 	defer c.Close()
 
 	utils.Infof("Connection from %s", c.RemoteAddr())

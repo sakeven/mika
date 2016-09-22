@@ -10,17 +10,17 @@ import (
 	"github.com/sakeven/mika/utils"
 )
 
-type Socks5UDPRelay struct {
+type UDPRelay struct {
 	conn net.Conn
 }
 
-func NewSocks5UDPRelay(conn net.Conn) *Socks5UDPRelay {
-	return &Socks5UDPRelay{
+func NewUDPRelay(conn net.Conn) *UDPRelay {
+	return &UDPRelay{
 		conn: conn,
 	}
 }
 
-func (s *Socks5UDPRelay) Serve() (err error) {
+func (s *UDPRelay) Serve() (err error) {
 	defer s.conn.Close()
 
 	rawAddr, _, err := s.parseRequest()
@@ -44,7 +44,7 @@ func (s *Socks5UDPRelay) Serve() (err error) {
 // o  DST.ADDR	desired destination address
 // o  DST.PORT	desired destination port
 // o  DATA	user data
-func (s *Socks5UDPRelay) getFrag() (rag byte, err error) {
+func (s *UDPRelay) getFrag() (rag byte, err error) {
 	raw := make([]byte, 3)
 	if _, err = io.ReadFull(s.conn, raw); err != nil {
 		return
@@ -53,7 +53,7 @@ func (s *Socks5UDPRelay) getFrag() (rag byte, err error) {
 	return raw[2], nil
 }
 
-func (s *Socks5UDPRelay) parseRequest() (rawAddr []byte, addr string, err error) {
+func (s *UDPRelay) parseRequest() (rawAddr []byte, addr string, err error) {
 
 	frag, err := s.getFrag()
 	if err != nil {
@@ -70,7 +70,7 @@ func (s *Socks5UDPRelay) parseRequest() (rawAddr []byte, addr string, err error)
 }
 
 // relay udp data
-func (s *Socks5UDPRelay) relay(rawAddr []byte) (err error) {
+func (s *UDPRelay) relay(rawAddr []byte) (err error) {
 	cg := mika.NewCryptoGenerate("aes-128-cfb", "123456")
 	cipher := cg.NewCrypto()
 	mikaConn, err := mika.DailWithRawAddr("udp", ":8080", rawAddr, cipher)

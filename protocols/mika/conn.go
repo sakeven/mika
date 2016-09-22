@@ -28,6 +28,7 @@ func NewConn(conn protocols.Protocol, crypto *Crypto) protocols.Protocol {
 	}
 }
 
+// RemoteAddr gets remote connection address.
 func (c *Conn) RemoteAddr() net.Addr {
 	return c.Conn.RemoteAddr()
 }

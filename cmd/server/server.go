@@ -21,7 +21,7 @@ func handle(c protocols.Protocol, cg *mika.CryptoGenerate) {
 	mika.Serve(mikaConn)
 }
 
-func Listen(serverInfo *utils.ServerConf) {
+func listen(serverInfo *utils.ServerConf) {
 	nl, err := net.Listen("tcp", fmt.Sprintf("%s:%d", serverInfo.Address, serverInfo.Port))
 	if err != nil {
 		utils.Fatalf("Create server error %s", err)
@@ -49,6 +49,6 @@ func main() {
 	//TODO check conf
 
 	for _, serverInfo := range conf.Server {
-		Listen(serverInfo)
+		listen(serverInfo)
 	}
 }

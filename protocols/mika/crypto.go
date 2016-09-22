@@ -53,6 +53,7 @@ func evpBytesToKey(password string, keyLen int) []byte {
 	return ms[:keyLen]
 }
 
+// NewCryptoGenerate creates a new crypto generator.
 func NewCryptoGenerate(method string, password string) *CryptoGenerate {
 	cryptoInfo := cryptoInfoMap[method]
 

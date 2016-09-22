@@ -20,7 +20,7 @@ type header struct {
 	Reverse         [2]byte
 	Protocol        byte
 	ProtocolRelated []byte
-	ChunkId         uint64
+	ChunkID         uint64
 	Hmac            []byte
 
 	Addr string
@@ -41,7 +41,7 @@ func newHeader(protocol byte, rawAddr []byte) *header {
 		Cmd:             dataForward,
 		Protocol:        protocol,
 		ProtocolRelated: rawAddr,
-		ChunkId:         uint64(time.Now().Unix()),
+		ChunkID:         uint64(time.Now().Unix()),
 	}
 }
 
@@ -52,13 +52,13 @@ func (h *header) Bytes(iv []byte, key []byte) (hb []byte) {
 	hb = append(hb, h.Protocol)
 	hb = append(hb, h.ProtocolRelated...)
 
-	chunkIdBytes := make([]byte, 8)
-	binary.BigEndian.PutUint64(chunkIdBytes, h.ChunkId)
-	hb = append(hb, chunkIdBytes...)
+	chunkIDBytes := make([]byte, 8)
+	binary.BigEndian.PutUint64(chunkIDBytes, h.ChunkID)
+	hb = append(hb, chunkIDBytes...)
 
 	h.Hmac = HmacSha1(append(iv, key...), hb)
 	hb = append(hb, h.Hmac[:]...)
-	// Debugf("%#v chunk id %d", h, h.ChunkId)
+	// Debugf("%#v chunk id %d", h, h.ChunkID)
 	return
 }
 
@@ -106,7 +106,7 @@ func getHeader(c io.Reader) (*header, error) {
 	}
 
 	io.ReadFull(c, raw[:18])
-	header.ChunkId = binary.BigEndian.Uint64(raw[:8])
+	header.ChunkID = binary.BigEndian.Uint64(raw[:8])
 	header.Hmac = raw[8:18]
 
 	if len(errs) > 0 {
@@ -116,7 +116,7 @@ func getHeader(c io.Reader) (*header, error) {
 }
 
 func (h *header) Check() error {
-	gap := time.Now().Unix() - int64(h.ChunkId)
+	gap := time.Now().Unix() - int64(h.ChunkID)
 	if gap < 0 {
 		gap = -gap
 	}

@@ -6,6 +6,7 @@ import (
 	"io"
 	"net"
 
+	"github.com/sakeven/mika/protocols"
 	"github.com/sakeven/mika/protocols/mika"
 	"github.com/sakeven/mika/utils"
 )
@@ -14,17 +15,17 @@ const (
 	socksv5 = 0x05
 )
 
-// Socks5TCPRelay as a socks5 server and mika client.
-type Socks5TCPRelay struct {
+// TCPRelay as a socks5 server and mika client.
+type TCPRelay struct {
 	conn     net.Conn
 	cipher   *mika.Crypto
 	ssServer string
 	closed   bool
 }
 
-// NewSocks5TCPRelay creates a new Socks5TCPRelay.
-func NewSocks5TCPRelay(conn net.Conn, mikaServer string, cipher *mika.Crypto) *Socks5TCPRelay {
-	return &Socks5TCPRelay{
+// NewTCPRelay creates a new Socks5 TCPRelay.
+func NewTCPRelay(conn net.Conn, mikaServer string, cipher *mika.Crypto) *TCPRelay {
+	return &TCPRelay{
 		conn:     conn,
 		cipher:   cipher,
 		ssServer: mikaServer,
@@ -32,7 +33,7 @@ func NewSocks5TCPRelay(conn net.Conn, mikaServer string, cipher *mika.Crypto) *S
 }
 
 // Serve handles connection between socks5 client and remote addr.
-func (s *Socks5TCPRelay) Serve() (err error) {
+func (s *TCPRelay) Serve() (err error) {
 	defer func() {
 		if !s.closed {
 			s.conn.Close()
@@ -42,11 +43,11 @@ func (s *Socks5TCPRelay) Serve() (err error) {
 
 	cmd, rawAddr, addr, err := s.parseRequest()
 	if err != nil {
-		mika.Errorf("Parse request error %v\n", err)
+		utils.Errorf("Parse request error %v\n", err)
 		return
 	}
 
-	mika.Infof("Proxy connection to %s\n", string(addr))
+	utils.Infof("Proxy connection to %s\n", string(addr))
 	s.reply()
 
 	switch cmd {
@@ -75,7 +76,7 @@ func (s *Socks5TCPRelay) Serve() (err error) {
 // |  1 |   1    |
 // +----+--------+
 // handShake dail handshake between socks5 client and socks5 server.
-func (s *Socks5TCPRelay) handShake() (err error) {
+func (s *TCPRelay) handShake() (err error) {
 	raw := make([]byte, 257)
 	if _, err = io.ReadFull(s.conn, raw[:2]); err != nil {
 		return
@@ -124,7 +125,7 @@ const (
 )
 
 // getCmd gets the cmd requested by socks5 client.
-func (s *Socks5TCPRelay) getCmd() (cmd byte, err error) {
+func (s *TCPRelay) getCmd() (cmd byte, err error) {
 	raw := make([]byte, 3)
 	if _, err = io.ReadFull(s.conn, raw); err != nil {
 		return
@@ -140,7 +141,7 @@ func (s *Socks5TCPRelay) getCmd() (cmd byte, err error) {
 }
 
 // parseRequest parses socks5 client request.
-func (s *Socks5TCPRelay) parseRequest() (cmd byte, rawAddr []byte, addr string, err error) {
+func (s *TCPRelay) parseRequest() (cmd byte, rawAddr []byte, addr string, err error) {
 	cmd, err = s.getCmd()
 	if err != nil {
 		return
@@ -189,14 +190,14 @@ func (s *Socks5TCPRelay) parseRequest() (cmd byte, rawAddr []byte, addr string, 
 //              o  IP V6 address: X’04’
 //           o  BND.ADDR       server bound address
 //           o  BND.PORT       server bound port in network octet order
-func (s *Socks5TCPRelay) reply() (err error) {
+func (s *TCPRelay) reply() (err error) {
 	_, err = s.conn.Write([]byte{socksv5, 0x00, 0x00, utils.IPv4Addr, 0x00, 0x00, 0x00, 0x00, 0x10, 0x10})
 	return
 }
 
 // connect handles CONNECT cmd
 // Here is a bit magic. It acts as a mika client that redirects conntion to mika server.
-func (s *Socks5TCPRelay) connect(rawAddr []byte) (err error) {
+func (s *TCPRelay) connect(rawAddr []byte) (err error) {
 
 	// TODO Dail("tcp", rawAdd) would be more reasonable.
 	mikaConn, err := mika.DailWithRawAddr("tcp", s.ssServer, rawAddr, s.cipher)
@@ -207,18 +208,18 @@ func (s *Socks5TCPRelay) connect(rawAddr []byte) (err error) {
 	defer func() {
 		if !s.closed {
 			err := mikaConn.Close()
-			mika.Errorf("Close connection error %v\n", err)
+			utils.Errorf("Close connection error %v\n", err)
 		}
 	}()
 
-	go mika.Pipe(s.conn, mikaConn)
-	mika.Pipe(mikaConn, s.conn)
+	go protocols.Pipe(s.conn, mikaConn)
+	protocols.Pipe(mikaConn, s.conn)
 	s.closed = true
 	return
 }
 
 // udpAssociate handles UDP_ASSOCIATE cmd
-func (s *Socks5TCPRelay) udpAssociate() (err error) {
+func (s *TCPRelay) udpAssociate() (err error) {
 	s.conn.Write([]byte{socksv5, 0x00, 0x00, utils.IPv4Addr, 0x00, 0x00, 0x00, 0x00, 0x04, 0x38})
 	return
 }

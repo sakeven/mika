@@ -76,7 +76,7 @@ func DailWithRawAddr(network string, server string, rawAddr []byte, cipher *Cryp
 	return NewMika(conn, cipher, header)
 }
 
-func DailWithRawAddrHttp(network string, server string, rawAddr []byte, cipher *Crypto) (protocols.Protocol, error) {
+func DailWithRawAddrHTTP(network string, server string, rawAddr []byte, cipher *Crypto) (protocols.Protocol, error) {
 	conn, err := net.Dial(network, server)
 	if err != nil {
 		return nil, err
@@ -96,7 +96,7 @@ func (c *Mika) Write(b []byte) (n int, err error) {
 		// ------------------------------
 		// |   2     | 10   | Variable  |
 		// ------------------------------
-		c.header.ChunkId++
+		c.header.ChunkID++
 		// hmac := HmacSha1(append(c.iv, c.key...), b)
 		// len(hmac)+dataLen = 12
 		dataLen += 12
@@ -104,8 +104,8 @@ func (c *Mika) Write(b []byte) (n int, err error) {
 		// utils.Debugf("Send %d hmac %#v", dataLen-12, hmac)
 		// utils.Debugf("Data write %#v", b)
 		var hmac []byte
-		buf, hmac = otaReqChunkAuth(c.iv, c.header.ChunkId, b)
-		utils.Debugf("Send %d data, chunkId %d, hmac %#v", dataLen-12, c.header.ChunkId, hmac)
+		buf, hmac = otaReqChunkAuth(c.iv, c.header.ChunkID, b)
+		utils.Debugf("Send %d data, chunkID %d, hmac %#v", dataLen-12, c.header.ChunkID, hmac)
 		// utils.Debugf("Data after write %#v", buf[12:dataLen])
 	}
 
@@ -143,10 +143,10 @@ func (c *Mika) Read(b []byte) (n int, err error) {
 			return 0, err
 		}
 
-		c.header.ChunkId++
-		utils.Debugf("ChunkId %d, receive %d datas, expectedhmac %#v ", c.header.ChunkId, dataLen, expectedhmac)
+		c.header.ChunkID++
+		utils.Debugf("ChunkID %d, receive %d datas, expectedhmac %#v ", c.header.ChunkID, dataLen, expectedhmac)
 
-		_, hmac := otaReqChunkAuth(c.iv, c.header.ChunkId, b[:dataLen])
+		_, hmac := otaReqChunkAuth(c.iv, c.header.ChunkID, b[:dataLen])
 		if !bytes.Equal(hmac, expectedhmac) {
 			utils.Errorf("Hmac %#v mismatch with %#v, remote addr %s", hmac, expectedhmac, c.RemoteAddr())
 			return 0, fmt.Errorf("Hmac mismatch")

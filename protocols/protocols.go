@@ -14,7 +14,7 @@ type Protocol interface {
 	Close() error
 }
 
-// Two protocols should be in same layer.
+// Pipe pipes two protocols which should be in same layer.
 func Pipe(dst, src Protocol) {
 	var buf = utils.GetBuf()
 

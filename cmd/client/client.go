@@ -22,7 +22,7 @@ func tcpServe(localConf *utils.LocalConf) {
 	var handleFunc func(c protocols.Protocol)
 	switch localConf.Protocol {
 	case "http":
-		handleFunc = handleHttp
+		handleFunc = handleHTTP
 	case "socks5":
 		handleFunc = handleSocks5
 	}
@@ -44,8 +44,8 @@ func handleSocks5(c protocols.Protocol) {
 	socks5Sever.Serve()
 }
 
-func handleHttp(c protocols.Protocol) {
-	httpSever := http.NewHttpRelay(c, servers[0].address, servers[0].cg.NewCrypto())
+func handleHTTP(c protocols.Protocol) {
+	httpSever := http.NewRelay(c, servers[0].address, servers[0].cg.NewCrypto())
 	httpSever.Serve()
 }
 

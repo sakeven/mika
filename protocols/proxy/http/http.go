@@ -12,23 +12,23 @@ import (
 	"github.com/sakeven/mika/utils"
 )
 
-type HttpRelay struct {
+type Relay struct {
 	conn     protocols.Protocol
 	cipher   *mika.Crypto
 	ssServer string
 	closed   bool
 }
 
-func NewHttpRelay(conn protocols.Protocol, mikaServer string, cipher *mika.Crypto) *HttpRelay {
-	return &HttpRelay{
+func NewRelay(conn protocols.Protocol, mikaServer string, cipher *mika.Crypto) *Relay {
+	return &Relay{
 		conn:     conn,
 		cipher:   cipher,
 		ssServer: mikaServer,
 	}
 }
 
-// HTTPRelay parse data and then send to mika server.
-func (h *HttpRelay) Serve() {
+// Serve parse data and then send to mika server.
+func (h *Relay) Serve() {
 
 	bf := bufio.NewReader(h.conn)
 	req, err := http.ReadRequest(bf)
@@ -38,7 +38,7 @@ func (h *HttpRelay) Serve() {
 	}
 
 	// TODO Set http protocol flag
-	mikaConn, err := mika.DailWithRawAddrHttp("tcp", h.ssServer, utils.ToAddr(req.URL.Host), h.cipher)
+	mikaConn, err := mika.DailWithRawAddrHTTP("tcp", h.ssServer, utils.ToAddr(req.URL.Host), h.cipher)
 	if err != nil {
 		return
 	}
@@ -51,9 +51,9 @@ func (h *HttpRelay) Serve() {
 	}()
 
 	if req.Method == "CONNECT" {
-		HttpsHandler(h.conn)
+		_HTTPSHandler(h.conn)
 	} else {
-		HttpHandler(mikaConn, req)
+		_HTTPHandler(mikaConn, req)
 	}
 
 	go protocols.Pipe(h.conn, mikaConn)
@@ -61,18 +61,13 @@ func (h *HttpRelay) Serve() {
 	h.closed = true
 }
 
-// In mika server we should parse http request.
-func Handle(conn protocols.Protocol) {
-	defer conn.Close()
+var HTTP200 = []byte("HTTP/1.1 200 Connection Established\r\n\r\n")
+
+func _HTTPSHandler(client protocols.Protocol) {
+	client.Write(HTTP200)
 }
 
-var HTTP_200 = []byte("HTTP/1.1 200 Connection Established\r\n\r\n")
-
-func HttpsHandler(client protocols.Protocol) {
-	client.Write(HTTP_200)
-}
-
-func HttpHandler(conn protocols.Protocol, req *http.Request) {
+func _HTTPHandler(conn protocols.Protocol, req *http.Request) {
 	utils.Infof("Sending request %v %v \n", req.Method, req.URL.Host)
 
 	rmProxyHeaders(req)

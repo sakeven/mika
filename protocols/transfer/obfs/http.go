@@ -4,14 +4,14 @@ import (
 	"net"
 )
 
-type Http struct {
+type HTTP struct {
 	isServerSide bool
 	readStart    bool
 	writeStart   bool
 	conn         net.Conn
 }
 
-func (h *Http) Write(b []byte) (n int, err error) {
+func (h *HTTP) Write(b []byte) (n int, err error) {
 
 	if !h.writeStart {
 		if h.isServerSide {
@@ -25,7 +25,7 @@ func (h *Http) Write(b []byte) (n int, err error) {
 	return h.conn.Write(b)
 }
 
-func (h *Http) Read(b []byte) (n int, err error) {
+func (h *HTTP) Read(b []byte) (n int, err error) {
 	if !h.readStart {
 		if h.isServerSide {
 			// read http request header
@@ -38,6 +38,6 @@ func (h *Http) Read(b []byte) (n int, err error) {
 	return h.conn.Read(b)
 }
 
-func (h *Http) Close() error {
+func (h *HTTP) Close() error {
 	return h.conn.Close()
 }

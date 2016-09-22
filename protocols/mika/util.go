@@ -18,12 +18,12 @@ func HmacSha1(key []byte, data []byte) []byte {
 }
 
 // TODO use buf to avoid allocate too many memory and objects.
-func otaReqChunkAuth(iv []byte, chunkId uint64, data []byte) ([]byte, []byte) {
+func otaReqChunkAuth(iv []byte, chunkID uint64, data []byte) ([]byte, []byte) {
 	nb := make([]byte, 2)
 	binary.BigEndian.PutUint16(nb, uint16(len(data)))
-	chunkIdBytes := make([]byte, 8)
-	binary.BigEndian.PutUint64(chunkIdBytes, chunkId)
-	hmac := HmacSha1(append(iv, chunkIdBytes...), data)
+	chunkIDBytes := make([]byte, 8)
+	binary.BigEndian.PutUint64(chunkIDBytes, chunkID)
+	hmac := HmacSha1(append(iv, chunkIDBytes...), data)
 	header := append(nb, hmac...)
 	return append(header, data...), hmac
 }
