@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io"
+	"math/rand"
 	"time"
 
 	"github.com/sakeven/mika/utils"
@@ -99,10 +100,16 @@ func getHeader(c io.Reader) (*header, error) {
 	case tcpForward, httpForward:
 		header.ProtocolRelated, header.Addr, err = utils.GetAddress(c)
 		if err != nil {
+			errs = append(errs, err)
+		}
+	// case httpForward:
+	// 	header.ProtocolRelated = nil
+	default:
+		len := rand.Int() % 4096
+		io.ReadFull(c, raw[:len])
+		if err != nil {
 			errs = append(errs, fmt.Errorf("error mika cmd %d", header.Cmd))
 		}
-		// case httpForward:
-		// 	header.ProtocolRelated = nil
 	}
 
 	io.ReadFull(c, raw[:18])
