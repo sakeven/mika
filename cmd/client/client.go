@@ -7,6 +7,7 @@ import (
 	"github.com/sakeven/mika/protocols"
 	"github.com/sakeven/mika/protocols/mika"
 	"github.com/sakeven/mika/protocols/proxy/http"
+	"github.com/sakeven/mika/protocols/proxy/socks5"
 	"github.com/sakeven/mika/utils"
 )
 
@@ -40,7 +41,7 @@ func tcpServe(localConf *utils.LocalConf) {
 }
 
 func handleSocks5(c protocols.Protocol) {
-	socks5Sever := mika.NewSocks5TCPRelay(c, servers[0].address, servers[0].cg.NewCrypto())
+	socks5Sever := socks5.NewTCPRelay(c, servers[0].address, servers[0].cg.NewCrypto())
 	socks5Sever.Serve()
 }
 

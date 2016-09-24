@@ -3,9 +3,11 @@ package main
 import (
 	"fmt"
 	"net"
+	"time"
 
 	"github.com/sakeven/mika/protocols"
 	"github.com/sakeven/mika/protocols/mika"
+	"github.com/sakeven/mika/protocols/transfer/tcp"
 	"github.com/sakeven/mika/utils"
 )
 
@@ -38,7 +40,8 @@ func listen(serverInfo *utils.ServerConf) {
 		}
 
 		go func() {
-			handle(c, cg)
+			tcpConn := &tcp.Conn{c, time.Duration(serverInfo.Timeout) * time.Second}
+			handle(tcpConn, cg)
 		}()
 	}
 }
@@ -49,6 +52,9 @@ func main() {
 	//TODO check conf
 
 	for _, serverInfo := range conf.Server {
+		if serverInfo.Timeout <= 0 {
+			serverInfo.Timeout = 30
+		}
 		listen(serverInfo)
 	}
 }

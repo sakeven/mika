@@ -10,6 +10,7 @@ import (
 type ServerConf struct {
 	Address  string `json:"address"`
 	Port     int    `json:"port"`
+	Timeout  int    `json:"timeout"`
 	Password string `json:"password"`
 	Method   string `json:"method"`
 }
