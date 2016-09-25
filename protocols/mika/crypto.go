@@ -6,6 +6,8 @@ import (
 	"crypto/md5"
 	"crypto/rand"
 	"io"
+
+	"github.com/sakeven/mika/utils"
 )
 
 type cryptoInfo struct {
@@ -53,31 +55,34 @@ func evpBytesToKey(password string, keyLen int) []byte {
 	return ms[:keyLen]
 }
 
+type CryptoGenerator struct {
+	info  *cryptoInfo
+	key   []byte
+	block cipher.Block
+	cache *utils.Cache
+}
+
 // NewCryptoGenerate creates a new crypto generator.
-func NewCryptoGenerate(method string, password string) *CryptoGenerate {
+func NewCryptoGenerator(method string, password string) *CryptoGenerator {
 	cryptoInfo := cryptoInfoMap[method]
 
 	key := evpBytesToKey(password, cryptoInfo.keyLen)
 	block := cryptoInfo.newBlock(key)
 
-	return &CryptoGenerate{
+	return &CryptoGenerator{
 		key:   key,
 		info:  cryptoInfo,
-		block: block}
+		block: block,
+		cache: utils.NewCache(),
+	}
 }
 
-type CryptoGenerate struct {
-	info  *cryptoInfo
-	key   []byte
-	block cipher.Block
-}
-
-func (cg *CryptoGenerate) NewCrypto() *Crypto {
-	return &Crypto{CryptoGenerate: cg}
+func (cg *CryptoGenerator) NewCrypto() *Crypto {
+	return &Crypto{CryptoGenerator: cg}
 }
 
 type Crypto struct {
-	*CryptoGenerate
+	*CryptoGenerator
 	iv  []byte
 	enc cipher.Stream
 	dec cipher.Stream

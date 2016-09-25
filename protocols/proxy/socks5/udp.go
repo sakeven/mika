@@ -71,7 +71,7 @@ func (s *UDPRelay) parseRequest() (rawAddr []byte, addr string, err error) {
 
 // relay udp data
 func (s *UDPRelay) relay(rawAddr []byte) (err error) {
-	cg := mika.NewCryptoGenerate("aes-128-cfb", "123456")
+	cg := mika.NewCryptoGenerator("aes-128-cfb", "123456")
 	cipher := cg.NewCrypto()
 	mikaConn, err := mika.DailWithRawAddr("udp", ":8080", rawAddr, cipher)
 	if err != nil {

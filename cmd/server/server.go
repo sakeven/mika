@@ -13,7 +13,7 @@ import (
 
 var conf *utils.Conf
 
-func handle(c protocols.Protocol, cg *mika.CryptoGenerate) {
+func handle(c protocols.Protocol, cg *mika.CryptoGenerator) {
 	mikaConn, err := mika.NewMika(c, cg.NewCrypto(), nil)
 	if err != nil {
 		c.Close()
@@ -30,7 +30,7 @@ func listen(serverInfo *utils.ServerConf) {
 	}
 
 	utils.Infof("Listen on %d\n", serverInfo.Port)
-	cg := mika.NewCryptoGenerate(serverInfo.Method, serverInfo.Password)
+	cg := mika.NewCryptoGenerator(serverInfo.Method, serverInfo.Password)
 
 	for {
 		c, err := nl.Accept()

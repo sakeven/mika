@@ -51,7 +51,7 @@ func handleHTTP(c protocols.Protocol) {
 }
 
 type server struct {
-	cg      *mika.CryptoGenerate
+	cg      *mika.CryptoGenerator
 	address string
 }
 
@@ -63,7 +63,7 @@ func main() {
 	for _, s := range conf.Server {
 		se := &server{
 			address: fmt.Sprintf("%s:%d", s.Address, s.Port),
-			cg:      mika.NewCryptoGenerate(s.Method, s.Password),
+			cg:      mika.NewCryptoGenerator(s.Method, s.Password),
 		}
 		servers = append(servers, se)
 	}
