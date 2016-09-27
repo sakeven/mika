@@ -9,6 +9,8 @@ import (
 
 	"github.com/sakeven/mika/protocols"
 	"github.com/sakeven/mika/utils"
+
+	"github.com/xtaci/kcp-go"
 )
 
 // Mika dails connection between mika server and mika client.
@@ -67,7 +69,8 @@ func (c *Mika) Close() error {
 }
 
 func DailWithRawAddr(network string, server string, rawAddr []byte, cipher *Crypto) (protocols.Protocol, error) {
-	conn, err := net.Dial(network, server)
+	conn, err := kcp.Dial(server)
+	// conn, err := net.Dial(network, server)
 	if err != nil {
 		return nil, err
 	}
