@@ -31,7 +31,7 @@ func listen(serverInfo *utils.ServerConf) {
 		utils.Fatalf("Create server error %s", err)
 	}
 
-	utils.Infof("Listen on %d\n", serverInfo.Port)
+	utils.Infof("Listen on tcp://%s:%d\n", serverInfo.Address, serverInfo.Port)
 	cg := mika.NewCryptoGenerator(serverInfo.Method, serverInfo.Password)
 
 	for {
@@ -49,7 +49,7 @@ func listen(serverInfo *utils.ServerConf) {
 }
 
 func listenKcp(serverInfo *utils.ServerConf) {
-	nl, err := kcp.Listen(fmt.Sprintf("%s:%d", serverInfo.Address, serverInfo.Port))
+	nl, err := kcp.ListenWithOptions(fmt.Sprintf("%s:%d", serverInfo.Address, serverInfo.Port), nil, 10, 3)
 	if err != nil {
 		utils.Fatalf("Create server error %s", err)
 	}
@@ -58,15 +58,19 @@ func listenKcp(serverInfo *utils.ServerConf) {
 	cg := mika.NewCryptoGenerator(serverInfo.Method, serverInfo.Password)
 
 	for {
-		c, err := nl.Accept()
+		conn, err := nl.AcceptKCP()
 		if err != nil {
 			utils.Errorf("Accept connection error %s", err)
 			continue
 		}
 
 		go func() {
-			tcpConn := &tcp.Conn{c, time.Duration(serverInfo.Timeout) * time.Second}
-			handle(tcpConn, cg)
+			conn.SetStreamMode(true)
+			conn.SetNoDelay(1, 20, 2, 1)
+			conn.SetACKNoDelay(true)
+			conn.SetWindowSize(1024, 1024)
+			kcpConn := &tcp.Conn{conn, time.Duration(serverInfo.Timeout) * time.Second}
+			handle(kcpConn, cg)
 		}()
 	}
 }

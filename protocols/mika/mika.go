@@ -69,8 +69,20 @@ func (c *Mika) Close() error {
 }
 
 func DailWithRawAddr(network string, server string, rawAddr []byte, cipher *Crypto) (protocols.Protocol, error) {
-	conn, err := kcp.Dial(server)
-	// conn, err := net.Dial(network, server)
+	var conn net.Conn
+	var err error
+	if network == "kcp" {
+		var kcpConn *kcp.UDPSession
+		kcpConn, err = kcp.DialWithOptions(server, nil, 10, 3)
+		kcpConn.SetStreamMode(true)
+		kcpConn.SetNoDelay(1, 20, 2, 1)
+		kcpConn.SetACKNoDelay(true)
+		kcpConn.SetWindowSize(128, 1024)
+		conn = kcpConn
+	} else {
+		conn, err = net.Dial(network, server)
+	}
+
 	if err != nil {
 		return nil, err
 	}
