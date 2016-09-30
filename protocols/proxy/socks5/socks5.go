@@ -7,6 +7,7 @@ import (
 
 	"github.com/sakeven/mika/protocols"
 	"github.com/sakeven/mika/protocols/mika"
+	"github.com/sakeven/mika/protocols/proxy"
 	"github.com/sakeven/mika/utils"
 )
 
@@ -30,6 +31,14 @@ func NewTCPRelay(conn protocols.Protocol, mikaServer string, cipher *mika.Crypto
 		ssServer: mikaServer,
 	}
 }
+
+// NewTCPRelay creates a new Socks5 TCPRelay.
+// func NewTCPRelay(conn protocols.Protocol, info *proxy.ServerInfo) *TCPRelay {
+// 	return &TCPRelay{
+// 		conn:   conn,
+// 		server: info,
+// 	}
+// }
 
 // Serve handles connection between socks5 client and remote addr.
 func (s *TCPRelay) Serve() (err error) {
@@ -199,8 +208,9 @@ func (s *TCPRelay) reply() (err error) {
 func (s *TCPRelay) connect(rawAddr []byte) (err error) {
 
 	// TODO Dail("tcp", rawAdd) would be more reasonable.
-	mikaConn, err := mika.DailWithRawAddr("tcp", s.ssServer, rawAddr, s.cipher)
+	mikaConn, err := mika.DailWithRawAddr("kcp", s.ssServer, rawAddr, s.cipher)
 	if err != nil {
+		utils.Errorf("%s", err)
 		return
 	}
 
