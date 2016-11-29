@@ -7,7 +7,6 @@ import (
 
 	"github.com/sakeven/mika/protocols"
 	"github.com/sakeven/mika/protocols/mika"
-	"github.com/sakeven/mika/protocols/proxy"
 	"github.com/sakeven/mika/utils"
 )
 
@@ -60,7 +59,7 @@ func (s *TCPRelay) Serve() (err error) {
 
 	switch cmd {
 	case CONNECT:
-		s.connect(rawAddr)
+		err = s.connect(rawAddr)
 	case UDP_ASSOCIATE:
 		s.udpAssociate()
 	case BIND:
