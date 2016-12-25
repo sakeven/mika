@@ -16,13 +16,15 @@ type Relay struct {
 	conn     protocols.Protocol
 	cipher   *mika.Crypto
 	ssServer string
+	protocol string
 	closed   bool
 }
 
-func NewRelay(conn protocols.Protocol, mikaServer string, cipher *mika.Crypto) *Relay {
+func NewRelay(conn protocols.Protocol, protocol string, mikaServer string, cipher *mika.Crypto) *Relay {
 	return &Relay{
 		conn:     conn,
 		cipher:   cipher,
+		protocol: protocol,
 		ssServer: mikaServer,
 	}
 }
@@ -38,7 +40,7 @@ func (h *Relay) Serve() {
 	}
 
 	// TODO Set http protocol flag
-	mikaConn, err := mika.DailWithRawAddrHTTP("tcp", h.ssServer, utils.ToAddr(req.URL.Host), h.cipher)
+	mikaConn, err := mika.DailWithRawAddrHTTP(h.protocol, h.ssServer, utils.ToAddr(req.URL.Host), h.cipher)
 	if err != nil {
 		return
 	}

@@ -1,3 +1,5 @@
 cmd/client/client
+cmd/client/client-tcp
 cmd/server/server
 *.json*
+.idea

@@ -19,17 +19,27 @@ type TCPRelay struct {
 	conn     protocols.Protocol
 	cipher   *mika.Crypto
 	ssServer string
+	protocol string
 	closed   bool
 }
 
 // NewTCPRelay creates a new Socks5 TCPRelay.
-func NewTCPRelay(conn protocols.Protocol, mikaServer string, cipher *mika.Crypto) *TCPRelay {
+func NewTCPRelay(conn protocols.Protocol, protocol string, mikaServer string, cipher *mika.Crypto) *TCPRelay {
 	return &TCPRelay{
 		conn:     conn,
 		cipher:   cipher,
 		ssServer: mikaServer,
+		protocol: protocol,
 	}
 }
+
+// NewTCPRelay creates a new Socks5 TCPRelay.
+// func NewTCPRelay(conn protocols.Protocol, info *proxy.ServerInfo) *TCPRelay {
+// 	return &TCPRelay{
+// 		conn:   conn,
+// 		server: info,
+// 	}
+// }
 
 // Serve handles connection between socks5 client and remote addr.
 func (s *TCPRelay) Serve() (err error) {
@@ -51,7 +61,7 @@ func (s *TCPRelay) Serve() (err error) {
 
 	switch cmd {
 	case CONNECT:
-		s.connect(rawAddr)
+		err = s.connect(rawAddr)
 	case UDP_ASSOCIATE:
 		s.udpAssociate()
 	case BIND:
@@ -199,8 +209,9 @@ func (s *TCPRelay) reply() (err error) {
 func (s *TCPRelay) connect(rawAddr []byte) (err error) {
 
 	// TODO Dail("tcp", rawAdd) would be more reasonable.
-	mikaConn, err := mika.DailWithRawAddr("tcp", s.ssServer, rawAddr, s.cipher)
+	mikaConn, err := mika.DailWithRawAddr(s.protocol, s.ssServer, rawAddr, s.cipher)
 	if err != nil {
+		utils.Errorf("%s", err)
 		return
 	}
 

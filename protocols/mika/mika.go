@@ -9,6 +9,8 @@ import (
 
 	"github.com/sakeven/mika/protocols"
 	"github.com/sakeven/mika/utils"
+
+	"github.com/xtaci/kcp-go"
 )
 
 // Mika dails connection between mika server and mika client.
@@ -67,9 +69,26 @@ func (c *Mika) Close() error {
 }
 
 func DailWithRawAddr(network string, server string, rawAddr []byte, cipher *Crypto) (protocols.Protocol, error) {
-	conn, err := net.Dial(network, server)
-	if err != nil {
-		return nil, err
+	var conn net.Conn
+	var err error
+	if network == "kcp" {
+		// TODO refactor
+		var kcpConn *kcp.UDPSession
+		kcpConn, err = kcp.DialWithOptions(server, nil, 10, 3)
+		if err != nil {
+			return nil, err
+		}
+
+		kcpConn.SetStreamMode(true)
+		kcpConn.SetNoDelay(1, 20, 2, 1)
+		kcpConn.SetACKNoDelay(true)
+		kcpConn.SetWindowSize(128, 1024)
+		conn = kcpConn
+	} else {
+		conn, err = net.Dial(network, server)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	header := newHeader(tcpForward, rawAddr)
@@ -77,9 +96,26 @@ func DailWithRawAddr(network string, server string, rawAddr []byte, cipher *Cryp
 }
 
 func DailWithRawAddrHTTP(network string, server string, rawAddr []byte, cipher *Crypto) (protocols.Protocol, error) {
-	conn, err := net.Dial(network, server)
-	if err != nil {
-		return nil, err
+	var conn net.Conn
+	var err error
+	if network == "kcp" {
+		// TODO refactor
+		var kcpConn *kcp.UDPSession
+		kcpConn, err = kcp.DialWithOptions(server, nil, 10, 3)
+		if err != nil {
+			return nil, err
+		}
+
+		kcpConn.SetStreamMode(true)
+		kcpConn.SetNoDelay(1, 20, 2, 1)
+		kcpConn.SetACKNoDelay(true)
+		kcpConn.SetWindowSize(128, 1024)
+		conn = kcpConn
+	} else {
+		conn, err = net.Dial(network, server)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	header := newHeader(httpForward, rawAddr)

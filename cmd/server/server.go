@@ -9,6 +9,8 @@ import (
 	"github.com/sakeven/mika/protocols/mika"
 	"github.com/sakeven/mika/protocols/transfer/tcp"
 	"github.com/sakeven/mika/utils"
+
+	"github.com/xtaci/kcp-go"
 )
 
 var conf *utils.Conf
@@ -29,7 +31,7 @@ func listen(serverInfo *utils.ServerConf) {
 		utils.Fatalf("Create server error %s", err)
 	}
 
-	utils.Infof("Listen on %d\n", serverInfo.Port)
+	utils.Infof("Listen on tcp://%s:%d\n", serverInfo.Address, serverInfo.Port)
 	cg := mika.NewCryptoGenerator(serverInfo.Method, serverInfo.Password)
 
 	for {
@@ -46,6 +48,33 @@ func listen(serverInfo *utils.ServerConf) {
 	}
 }
 
+func listenKcp(serverInfo *utils.ServerConf) {
+	nl, err := kcp.ListenWithOptions(fmt.Sprintf("%s:%d", serverInfo.Address, serverInfo.Port), nil, 10, 3)
+	if err != nil {
+		utils.Fatalf("Create server error %s", err)
+	}
+
+	utils.Infof("Listen on kcp://%s:%d\n", serverInfo.Address, serverInfo.Port)
+	cg := mika.NewCryptoGenerator(serverInfo.Method, serverInfo.Password)
+
+	for {
+		conn, err := nl.AcceptKCP()
+		if err != nil {
+			utils.Errorf("Accept connection error %s", err)
+			continue
+		}
+
+		go func() {
+			conn.SetStreamMode(true)
+			conn.SetNoDelay(1, 20, 2, 1)
+			conn.SetACKNoDelay(true)
+			conn.SetWindowSize(1024, 1024)
+			kcpConn := &tcp.Conn{conn, time.Duration(serverInfo.Timeout) * time.Second}
+			handle(kcpConn, cg)
+		}()
+	}
+}
+
 func main() {
 	conf = utils.ParseSeverConf()
 
@@ -55,6 +84,11 @@ func main() {
 		if serverInfo.Timeout <= 0 {
 			serverInfo.Timeout = 30
 		}
-		listen(serverInfo)
+
+		if serverInfo.Protocol == "kcp" {
+			listenKcp(serverInfo)
+		} else {
+			listen(serverInfo)
+		}
 	}
 }
