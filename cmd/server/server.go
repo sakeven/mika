@@ -84,6 +84,11 @@ func main() {
 		if serverInfo.Timeout <= 0 {
 			serverInfo.Timeout = 30
 		}
-		listenKcp(serverInfo)
+
+		if serverInfo.Protocol == "kcp" {
+			listenKcp(serverInfo)
+		} else {
+			listen(serverInfo)
+		}
 	}
 }

@@ -13,6 +13,7 @@ type ServerConf struct {
 	Timeout  int    `json:"timeout"`
 	Password string `json:"password"`
 	Method   string `json:"method"`
+	Protocol string `json:"protocol"`
 }
 
 type LocalConf struct {
@@ -47,6 +48,7 @@ func ParseSeverConf() *Conf {
 	flag.IntVar(&conf.Server[0].Port, "p", 8388, "server port")
 	flag.StringVar(&conf.Server[0].Password, "k", "password", "password")
 	flag.StringVar(&conf.Server[0].Method, "m", "aes-256-cfb", "encryption method")
+	conf.Server[0].Protocol = "tcp"
 	conf.Local[0].Protocol = "socks5"
 	flag.StringVar(&conf.Local[0].Address, "b", "127.0.0.1", "local binding address")
 	flag.IntVar(&conf.Local[0].Port, "l", 1080, "local port")

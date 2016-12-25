@@ -41,18 +41,19 @@ func tcpServe(localConf *utils.LocalConf) {
 }
 
 func handleSocks5(c protocols.Protocol) {
-	socks5Sever := socks5.NewTCPRelay(c, servers[0].address, servers[0].cg.NewCrypto())
+	socks5Sever := socks5.NewTCPRelay(c, servers[0].protocol, servers[0].address, servers[0].cg.NewCrypto())
 	socks5Sever.Serve()
 }
 
 func handleHTTP(c protocols.Protocol) {
-	httpSever := http.NewRelay(c, servers[0].address, servers[0].cg.NewCrypto())
+	httpSever := http.NewRelay(c, servers[0].protocol, servers[0].address, servers[0].cg.NewCrypto())
 	httpSever.Serve()
 }
 
 type server struct {
-	cg      *mika.CryptoGenerator
-	address string
+	cg       *mika.CryptoGenerator
+	address  string
+	protocol string
 }
 
 var servers []*server
@@ -62,8 +63,9 @@ func main() {
 	conf := utils.ParseSeverConf()
 	for _, s := range conf.Server {
 		se := &server{
-			address: fmt.Sprintf("%s:%d", s.Address, s.Port),
-			cg:      mika.NewCryptoGenerator(s.Method, s.Password),
+			address:  fmt.Sprintf("%s:%d", s.Address, s.Port),
+			cg:       mika.NewCryptoGenerator(s.Method, s.Password),
+			protocol: s.Protocol,
 		}
 		servers = append(servers, se)
 	}

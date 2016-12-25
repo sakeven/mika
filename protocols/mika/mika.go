@@ -91,16 +91,31 @@ func DailWithRawAddr(network string, server string, rawAddr []byte, cipher *Cryp
 		}
 	}
 
-	
-
 	header := newHeader(tcpForward, rawAddr)
 	return NewMika(conn, cipher, header)
 }
 
 func DailWithRawAddrHTTP(network string, server string, rawAddr []byte, cipher *Crypto) (protocols.Protocol, error) {
-	conn, err := net.Dial(network, server)
-	if err != nil {
-		return nil, err
+	var conn net.Conn
+	var err error
+	if network == "kcp" {
+		// TODO refactor
+		var kcpConn *kcp.UDPSession
+		kcpConn, err = kcp.DialWithOptions(server, nil, 10, 3)
+		if err != nil {
+			return nil, err
+		}
+
+		kcpConn.SetStreamMode(true)
+		kcpConn.SetNoDelay(1, 20, 2, 1)
+		kcpConn.SetACKNoDelay(true)
+		kcpConn.SetWindowSize(128, 1024)
+		conn = kcpConn
+	} else {
+		conn, err = net.Dial(network, server)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	header := newHeader(httpForward, rawAddr)
