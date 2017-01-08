@@ -71,7 +71,7 @@ func (c *Mika) Close() error {
 func DailWithRawAddr(network string, server string, rawAddr []byte, cipher *Crypto) (protocols.Protocol, error) {
 	var conn net.Conn
 	var err error
-	if network == "kcp" {
+	if network == protocols.KCP {
 		// TODO refactor
 		var kcpConn *kcp.UDPSession
 		kcpConn, err = kcp.DialWithOptions(server, nil, 10, 3)
@@ -98,7 +98,7 @@ func DailWithRawAddr(network string, server string, rawAddr []byte, cipher *Cryp
 func DailWithRawAddrHTTP(network string, server string, rawAddr []byte, cipher *Crypto) (protocols.Protocol, error) {
 	var conn net.Conn
 	var err error
-	if network == "kcp" {
+	if network == protocols.KCP {
 		// TODO refactor
 		var kcpConn *kcp.UDPSession
 		kcpConn, err = kcp.DialWithOptions(server, nil, 10, 3)

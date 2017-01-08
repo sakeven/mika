@@ -22,9 +22,9 @@ func tcpServe(localConf *utils.LocalConf) {
 
 	var handleFunc func(c protocols.Protocol)
 	switch localConf.Protocol {
-	case "http":
+	case protocols.HTTP:
 		handleFunc = handleHTTP
-	case "socks5":
+	case protocols.SOCKS5:
 		handleFunc = handleSocks5
 	}
 

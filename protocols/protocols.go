@@ -7,6 +7,13 @@ import (
 	"github.com/sakeven/mika/utils"
 )
 
+const (
+	HTTP = "http"
+	SOCKS5 = "socks5"
+	KCP = "kcp"
+	tcp = "tcp"
+)
+
 type Protocol interface {
 	Write(b []byte) (n int, err error)
 	Read(b []byte) (n int, err error)
