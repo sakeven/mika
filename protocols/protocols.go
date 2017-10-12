@@ -3,17 +3,20 @@ package protocols
 
 import (
 	"net"
+	"net/http"
 
 	"github.com/sakeven/mika/utils"
 )
 
+// protocols
 const (
-	HTTP = "http"
+	HTTP   = "http"
 	SOCKS5 = "socks5"
-	KCP = "kcp"
-	tcp = "tcp"
+	KCP    = "kcp"
+	TCP    = "tcp"
 )
 
+// Protocol in an interface of network connection
 type Protocol interface {
 	Write(b []byte) (n int, err error)
 	Read(b []byte) (n int, err error)
@@ -36,6 +39,9 @@ func Pipe(dst, src Protocol) {
 		n, rerr = src.Read(buf)
 		if n > 0 {
 			_, werr = dst.Write(buf[:n])
+			if flusher, ok := dst.(http.Flusher); ok {
+				flusher.Flush()
+			}
 		}
 
 		if rerr != nil || werr != nil {

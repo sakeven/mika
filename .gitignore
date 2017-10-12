@@ -1,5 +1,6 @@
 cmd/client/client
 cmd/client/client-tcp
 cmd/server/server
+bin
 *.json*
 .idea
