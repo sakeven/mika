@@ -8,17 +8,17 @@ type LogLevel int
 
 const (
 	DebugLevel LogLevel = iota
-	PanicLevel
 	InfoLevel
 	WarnLevel
 	ErrorLevel
+	PanicLevel
 	FatalLevel
 )
 
 var logLevel LogLevel
 
 func init() {
-	logLevel = DebugLevel
+	logLevel = InfoLevel
 }
 
 func SetLevel(level LogLevel) {
