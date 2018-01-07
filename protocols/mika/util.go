@@ -11,10 +11,10 @@ import (
 var defaultBufSize = 4096
 var leakyBuf = utils.NewBufPool(defaultBufSize)
 
-func HmacSha1(key []byte, data []byte) []byte {
-	hmacSha1 := hmac.New(sha1.New, key)
-	hmacSha1.Write(data)
-	return hmacSha1.Sum(nil)[:10]
+func hmacSha1(key []byte, data []byte) []byte {
+	_hmacSha1 := hmac.New(sha1.New, key)
+	_hmacSha1.Write(data)
+	return _hmacSha1.Sum(nil)[:10]
 }
 
 // TODO use buf to avoid allocate too many memory and objects.
@@ -23,7 +23,7 @@ func otaReqChunkAuth(iv []byte, chunkID uint64, data []byte) ([]byte, []byte) {
 	binary.BigEndian.PutUint16(nb, uint16(len(data)))
 	chunkIDBytes := make([]byte, 8)
 	binary.BigEndian.PutUint64(chunkIDBytes, chunkID)
-	hmac := HmacSha1(append(iv, chunkIDBytes...), data)
+	hmac := hmacSha1(append(iv, chunkIDBytes...), data)
 	header := append(nb, hmac...)
 	return append(header, data...), hmac
 }

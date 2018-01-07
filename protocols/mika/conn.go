@@ -42,18 +42,6 @@ func (c *Conn) Close() error {
 	return c.Conn.Close()
 }
 
-// func DailWithRawAddr(network string, server string, rawAddr []byte, cipher *Crypto) (ss net.Conn, err error) {
-// 	conn, err := net.Dial(network, server)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	ss = NewConn(conn, cipher)
-// 	_, err = ss.Write(rawAddr)
-
-// 	return
-// }
-
 // Write writes data to connection.
 func (c *Conn) write(b []byte) (n int, err error) {
 	return c.Conn.Write(b)

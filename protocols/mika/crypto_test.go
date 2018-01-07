@@ -33,7 +33,7 @@ func Benchmark_evpBytesToKey(b *testing.B) {
 }
 
 func benchmarkCipherEncInit(b *testing.B, method string) {
-	cg := NewCryptoGenerate(method, "password")
+	cg := NewCryptoGenerator(method, "password")
 	for i := 0; i < b.N; i++ {
 		crypto := cg.NewCrypto()
 		crypto.initEncStream()
@@ -45,7 +45,7 @@ func BenchmarkAES256EncInit(b *testing.B) {
 }
 
 func benchmarkCipherDecInit(b *testing.B, method string) {
-	cg := NewCryptoGenerate(method, "password")
+	cg := NewCryptoGenerator(method, "password")
 	for i := 0; i < b.N; i++ {
 		crypto := cg.NewCrypto()
 		crypto.initDecStream(cipherIv[:cg.info.ivLen])

@@ -57,7 +57,7 @@ func (h *header) Bytes(iv []byte, key []byte) (hb []byte) {
 	binary.BigEndian.PutUint64(chunkIDBytes, h.ChunkID)
 	hb = append(hb, chunkIDBytes...)
 
-	h.Hmac = HmacSha1(append(iv, key...), hb)
+	h.Hmac = hmacSha1(append(iv, key...), hb)
 	hb = append(hb, h.Hmac[:]...)
 	// Debugf("%#v chunk id %d", h, h.ChunkID)
 	return

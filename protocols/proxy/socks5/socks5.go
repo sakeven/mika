@@ -33,14 +33,6 @@ func NewTCPRelay(conn protocols.Protocol, protocol string, mikaServer string, ci
 	}
 }
 
-// NewTCPRelay creates a new Socks5 TCPRelay.
-// func NewTCPRelay(conn protocols.Protocol, info *proxy.ServerInfo) *TCPRelay {
-// 	return &TCPRelay{
-// 		conn:   conn,
-// 		server: info,
-// 	}
-// }
-
 // Serve handles connection between socks5 client and remote addr.
 func (s *TCPRelay) Serve() (err error) {
 	defer func() {
@@ -60,11 +52,11 @@ func (s *TCPRelay) Serve() (err error) {
 	s.reply()
 
 	switch cmd {
-	case CONNECT:
+	case cmdConnect:
 		err = s.connect(rawAddr)
-	case UDP_ASSOCIATE:
+	case cmdUDPAssociate:
 		s.udpAssociate()
-	case BIND:
+	case cmdBind:
 	default:
 		err = fmt.Errorf("unknow cmd type")
 	}
@@ -127,10 +119,11 @@ func (s *TCPRelay) handShake() (err error) {
 //           o  DST.ADDR       desired destination address
 //           o  DST.PORT desired destination port in network octet order
 
+// SOCKS5 CMD
 const (
-	CONNECT       = 0x01
-	BIND          = 0x02
-	UDP_ASSOCIATE = 0x03
+	cmdConnect      = 0x01
+	cmdBind         = 0x02
+	cmdUDPAssociate = 0x03
 )
 
 // getCmd gets the cmd requested by socks5 client.
@@ -158,9 +151,9 @@ func (s *TCPRelay) parseRequest() (cmd byte, rawAddr []byte, addr string, err er
 
 	// check cmd type
 	switch cmd {
-	case CONNECT:
-	case BIND:
-	case UDP_ASSOCIATE:
+	case cmdConnect:
+	case cmdBind:
+	case cmdUDPAssociate:
 	default:
 		err = fmt.Errorf("unknow cmd type")
 		return
@@ -200,7 +193,7 @@ func (s *TCPRelay) parseRequest() (cmd byte, rawAddr []byte, addr string, err er
 //           o  BND.ADDR       server bound address
 //           o  BND.PORT       server bound port in network octet order
 func (s *TCPRelay) reply() (err error) {
-	_, err = s.conn.Write([]byte{socksv5, 0x00, 0x00, utils.IPv4Addr, 0x00, 0x00, 0x00, 0x00, 0x10, 0x10})
+	_, err = s.conn.Write([]byte{socksv5, 0x00, 0x00, utils.AddrIPv4, 0x00, 0x00, 0x00, 0x00, 0x10, 0x10})
 	return
 }
 
@@ -230,6 +223,6 @@ func (s *TCPRelay) connect(rawAddr []byte) (err error) {
 
 // udpAssociate handles UDP_ASSOCIATE cmd
 func (s *TCPRelay) udpAssociate() (err error) {
-	s.conn.Write([]byte{socksv5, 0x00, 0x00, utils.IPv4Addr, 0x00, 0x00, 0x00, 0x00, 0x04, 0x38})
+	s.conn.Write([]byte{socksv5, 0x00, 0x00, utils.AddrIPv4, 0x00, 0x00, 0x00, 0x00, 0x04, 0x38})
 	return
 }

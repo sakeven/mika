@@ -9,7 +9,7 @@ import (
 func Test_HeaderBytes(t *testing.T) {
 	rawAddr := []byte{0x1, 0x2, 0x3, 0x4, 0x5, 0x10, 0x4}
 	h := newHeader(tcpForward, rawAddr)
-	h.ChunkId = 123456789
+	h.ChunkID = 123456789
 
 	iv := []byte{0x1, 0x2, 0x3, 0x4}
 	key := []byte{0x1, 0x2, 0x3, 0x4}
@@ -35,8 +35,8 @@ func Test_GetHeader(t *testing.T) {
 		return
 	}
 
-	if gotHeader.ChunkId != wantedHeader.ChunkId {
-		t.Errorf("Parse header error, wanted chunk id %#v, got %#v", wantedHeader.ChunkId, gotHeader.ChunkId)
+	if gotHeader.ChunkID != wantedHeader.ChunkID {
+		t.Errorf("Parse header error, wanted chunk id %#v, got %#v", wantedHeader.ChunkID, gotHeader.ChunkID)
 	}
 }
 

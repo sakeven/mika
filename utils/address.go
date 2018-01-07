@@ -9,16 +9,18 @@ import (
 	"strings"
 )
 
+// Addr type and length
 const (
-	IPv4Addr   = 0x1
-	DomainAddr = 0x3
-	IPv6Addr   = 0x4
+	AddrIPv4   = 0x1
+	AddrDomain = 0x3
+	AddrIPv6   = 0x4
 
 	ipv4Len = net.IPv4len
 	ipv6Len = net.IPv6len
 	portLen = 2
 )
 
+// GetAddress gets address from a reader.
 // +------+----------+----------+
 // | ATYP | DST.ADDR | DST.PORT |
 // +------+----------+----------+
@@ -50,14 +52,14 @@ func GetAddress(c io.Reader) (raw []byte, addr string, err error) {
 
 	var rawAddrLen = 0
 	switch atyp[0] {
-	case IPv4Addr:
+	case AddrIPv4:
 		rawAddrLen = ipv4Len + portLen
-	case DomainAddr:
+	case AddrDomain:
 		dmLen := raw[pos : pos+1]
 		pos++
 		io.ReadFull(c, dmLen)
 		rawAddrLen = int(dmLen[0] + portLen)
-	case IPv6Addr:
+	case AddrIPv6:
 		rawAddrLen = ipv6Len + portLen
 	default:
 		errs = append(errs, fmt.Errorf("unknow address type %d", atyp[0]))
@@ -74,11 +76,11 @@ func GetAddress(c io.Reader) (raw []byte, addr string, err error) {
 
 	var host string
 	switch atyp[0] {
-	case IPv4Addr:
+	case AddrIPv4:
 		host = net.IP(rawAddr[:ipv4Len]).String()
-	case DomainAddr:
+	case AddrDomain:
 		host = string(rawAddr[:rawAddrLen-portLen])
-	case IPv6Addr:
+	case AddrIPv6:
 		host = net.IP(rawAddr[:ipv6Len]).String()
 	}
 
@@ -91,6 +93,7 @@ func GetAddress(c io.Reader) (raw []byte, addr string, err error) {
 	return raw[:pos], net.JoinHostPort(host, strconv.Itoa(port)), nil
 }
 
+// ToAddr changes addr from string to network bytes
 func ToAddr(addr string) []byte {
 	if strings.Index(addr, ":") < 0 {
 		addr += ":80"
@@ -105,14 +108,14 @@ func ToAddr(addr string) []byte {
 
 	if ip == nil {
 		l := len(host)
-		addrBytes = append(addrBytes, DomainAddr)
+		addrBytes = append(addrBytes, AddrDomain)
 		addrBytes = append(addrBytes, byte(l))
 		addrBytes = append(addrBytes, []byte(host)...)
-	} else if len(ip) == 4 {
-		addrBytes = append(addrBytes, IPv4Addr)
-		addrBytes = append(addrBytes, []byte(ip)...)
-	} else if len(ip) == 16 {
-		addrBytes = append(addrBytes, IPv6Addr)
+	} else if ipv4 := ip.To4(); ipv4 != nil {
+		addrBytes = append(addrBytes, AddrIPv4)
+		addrBytes = append(addrBytes, []byte(ipv4)...)
+	} else {
+		addrBytes = append(addrBytes, AddrIPv6)
 		addrBytes = append(addrBytes, []byte(ip)...)
 	}
 	p, err := strconv.Atoi(port)
