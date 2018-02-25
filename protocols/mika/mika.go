@@ -8,6 +8,7 @@ import (
 	"net"
 
 	"github.com/sakeven/mika/protocols"
+	"github.com/sakeven/mika/protocols/transfer/obfs"
 	"github.com/sakeven/mika/utils"
 
 	"github.com/xtaci/kcp-go"
@@ -68,10 +69,11 @@ func (c *Mika) Close() error {
 	return c.Conn.Close()
 }
 
-func DailWithRawAddr(network string, server string, rawAddr []byte, cipher *Crypto) (protocols.Protocol, error) {
+func dialConn(network string, server string) (protocols.Protocol, error) {
 	var conn net.Conn
 	var err error
-	if network == protocols.KCP {
+	switch network {
+	case protocols.KCP:
 		// TODO refactor
 		var kcpConn *kcp.UDPSession
 		kcpConn, err = kcp.DialWithOptions(server, nil, 10, 3)
@@ -84,11 +86,28 @@ func DailWithRawAddr(network string, server string, rawAddr []byte, cipher *Cryp
 		kcpConn.SetACKNoDelay(true)
 		kcpConn.SetWindowSize(128, 1024)
 		conn = kcpConn
-	} else {
+	default:
+		network := network
+		if network == protocols.ObfsHTTP {
+			network = "tcp"
+		}
 		conn, err = net.Dial(network, server)
 		if err != nil {
 			return nil, err
 		}
+	}
+
+	if network == protocols.ObfsHTTP {
+		return obfs.NewHTTP(conn, "www.baidu.com", false), nil
+	}
+
+	return conn, nil
+}
+
+func DailWithRawAddr(network string, server string, rawAddr []byte, cipher *Crypto) (protocols.Protocol, error) {
+	conn, err := dialConn(network, server)
+	if err != nil {
+		return nil, err
 	}
 
 	header := newHeader(tcpForward, rawAddr)
@@ -96,26 +115,9 @@ func DailWithRawAddr(network string, server string, rawAddr []byte, cipher *Cryp
 }
 
 func DailWithRawAddrHTTP(network string, server string, rawAddr []byte, cipher *Crypto) (protocols.Protocol, error) {
-	var conn net.Conn
-	var err error
-	if network == protocols.KCP {
-		// TODO refactor
-		var kcpConn *kcp.UDPSession
-		kcpConn, err = kcp.DialWithOptions(server, nil, 10, 3)
-		if err != nil {
-			return nil, err
-		}
-
-		kcpConn.SetStreamMode(true)
-		kcpConn.SetNoDelay(1, 20, 2, 1)
-		kcpConn.SetACKNoDelay(true)
-		kcpConn.SetWindowSize(128, 1024)
-		conn = kcpConn
-	} else {
-		conn, err = net.Dial(network, server)
-		if err != nil {
-			return nil, err
-		}
+	conn, err := dialConn(network, server)
+	if err != nil {
+		return nil, err
 	}
 
 	header := newHeader(httpForward, rawAddr)

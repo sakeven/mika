@@ -59,7 +59,7 @@ type server struct {
 var servers []*server
 
 func main() {
-
+	utils.SetLevel(utils.DebugLevel)
 	conf := utils.ParseSeverConf()
 	for _, s := range conf.Server {
 		se := &server{

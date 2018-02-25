@@ -7,6 +7,7 @@ import (
 
 	"github.com/sakeven/mika/protocols"
 	"github.com/sakeven/mika/protocols/mika"
+	"github.com/sakeven/mika/protocols/transfer/obfs"
 	"github.com/sakeven/mika/protocols/transfer/tcp"
 	"github.com/sakeven/mika/utils"
 
@@ -42,7 +43,14 @@ func listen(serverInfo *utils.ServerConf) {
 		}
 
 		go func() {
-			tcpConn := &tcp.Conn{c, time.Duration(serverInfo.Timeout) * time.Second}
+			var tcpConn protocols.Protocol = &tcp.Conn{
+				Conn:    c,
+				Timeout: time.Duration(serverInfo.Timeout) * time.Second,
+			}
+			if serverInfo.Protocol == protocols.ObfsHTTP {
+				utils.Debugf("use protocol %s", serverInfo.Protocol)
+				tcpConn = obfs.NewHTTP(tcpConn, "www.baidu.com", true)
+			}
 			handle(tcpConn, cg)
 		}()
 	}
@@ -69,7 +77,10 @@ func listenKcp(serverInfo *utils.ServerConf) {
 			conn.SetNoDelay(1, 20, 2, 1)
 			conn.SetACKNoDelay(true)
 			conn.SetWindowSize(1024, 1024)
-			kcpConn := &tcp.Conn{conn, time.Duration(serverInfo.Timeout) * time.Second}
+			kcpConn := &tcp.Conn{
+				Conn:    conn,
+				Timeout: time.Duration(serverInfo.Timeout) * time.Second,
+			}
 			handle(kcpConn, cg)
 		}()
 	}
@@ -77,6 +88,7 @@ func listenKcp(serverInfo *utils.ServerConf) {
 
 func main() {
 	conf = utils.ParseSeverConf()
+	utils.SetLevel(utils.DebugLevel)
 
 	//TODO check conf
 

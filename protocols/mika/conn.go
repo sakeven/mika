@@ -90,7 +90,6 @@ func (c *Conn) Read(b []byte) (n int, err error) {
 		if _, err := io.ReadFull(c.Conn, iv); err != nil {
 			return 0, err
 		}
-
 		c.initDecStream(iv)
 		c.readStart = true
 	} else if !c.readStart {
