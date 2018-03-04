@@ -5,13 +5,9 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io"
-	"net"
 
 	"github.com/sakeven/mika/protocols"
-	"github.com/sakeven/mika/protocols/transfer/obfs"
 	"github.com/sakeven/mika/utils"
-
-	"github.com/xtaci/kcp-go"
 )
 
 // Mika dails connection between mika server and mika client.
@@ -54,6 +50,7 @@ func NewMika(conn protocols.Protocol, cipher *Crypto, header *header) (*Mika, er
 	} else {
 		// On client side, send header as quickly.
 		iv := cipher.initEncStream()
+		utils.Debugf("iv %#v", iv)
 		ss.write(iv)
 		data := header.Bytes(cipher.iv, cipher.key)
 		ss.Write(data)
@@ -69,57 +66,14 @@ func (c *Mika) Close() error {
 	return c.Conn.Close()
 }
 
-func dialConn(network string, server string) (protocols.Protocol, error) {
-	var conn net.Conn
-	var err error
-	switch network {
-	case protocols.KCP:
-		// TODO refactor
-		var kcpConn *kcp.UDPSession
-		kcpConn, err = kcp.DialWithOptions(server, nil, 10, 3)
-		if err != nil {
-			return nil, err
-		}
-
-		kcpConn.SetStreamMode(true)
-		kcpConn.SetNoDelay(1, 20, 2, 1)
-		kcpConn.SetACKNoDelay(true)
-		kcpConn.SetWindowSize(128, 1024)
-		conn = kcpConn
-	default:
-		network := network
-		if network == protocols.ObfsHTTP {
-			network = "tcp"
-		}
-		conn, err = net.Dial(network, server)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	if network == protocols.ObfsHTTP {
-		return obfs.NewHTTP(conn, "www.baidu.com", false), nil
-	}
-
-	return conn, nil
-}
-
-func DailWithRawAddr(network string, server string, rawAddr []byte, cipher *Crypto) (protocols.Protocol, error) {
-	conn, err := dialConn(network, server)
-	if err != nil {
-		return nil, err
-	}
-
+// DailWithRawAddr creates a new connetion
+func DailWithRawAddr(conn protocols.Protocol, rawAddr []byte, cipher *Crypto) (protocols.Protocol, error) {
 	header := newHeader(tcpForward, rawAddr)
 	return NewMika(conn, cipher, header)
 }
 
-func DailWithRawAddrHTTP(network string, server string, rawAddr []byte, cipher *Crypto) (protocols.Protocol, error) {
-	conn, err := dialConn(network, server)
-	if err != nil {
-		return nil, err
-	}
-
+// DailWithRawAddrHTTP creates a new http proxy connetion
+func DailWithRawAddrHTTP(conn protocols.Protocol, rawAddr []byte, cipher *Crypto) (protocols.Protocol, error) {
 	header := newHeader(httpForward, rawAddr)
 	return NewMika(conn, cipher, header)
 }

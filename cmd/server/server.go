@@ -49,7 +49,7 @@ func listen(serverInfo *utils.ServerConf) {
 			}
 			if serverInfo.Protocol == protocols.ObfsHTTP {
 				utils.Debugf("use protocol %s", serverInfo.Protocol)
-				tcpConn = obfs.NewHTTP(tcpConn, "www.baidu.com", true)
+				tcpConn = obfs.NewHTTP(tcpConn, true)
 			}
 			handle(tcpConn, cg)
 		}()
@@ -87,7 +87,7 @@ func listenKcp(serverInfo *utils.ServerConf) {
 }
 
 func main() {
-	conf = utils.ParseSeverConf()
+	conf = utils.ParseConf()
 	utils.SetLevel(utils.DebugLevel)
 
 	//TODO check conf

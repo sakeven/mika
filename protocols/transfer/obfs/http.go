@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"net"
+	"net/url"
 	"time"
 
 	"github.com/sakeven/mika/protocols"
@@ -22,13 +23,22 @@ type HTTP struct {
 
 // NewHTTP creates a http obfs connection.
 // uri is "www.baicu.com/xcc"
-func NewHTTP(conn protocols.Protocol, uri string, isServerSide bool) *HTTP {
+func NewHTTP(conn protocols.Protocol, isServerSide bool) *HTTP {
 	return &HTTP{
-		uri:          "/",
-		host:         uri,
 		conn:         conn,
 		isServerSide: isServerSide,
 	}
+}
+
+// SetURI is used at client side to configure uri.
+func (h *HTTP) SetURI(uri string) error {
+	u, err := url.Parse(uri)
+	if err != nil {
+		return err
+	}
+	h.uri = u.RequestURI()
+	h.host = u.Host
+	return nil
 }
 
 // RemoteAddr gets remote connection address.
@@ -59,26 +69,40 @@ func (h *HTTP) Write(b []byte) (n int, err error) {
 
 func (h *HTTP) Read(b []byte) (n int, err error) {
 	if !h.readStart {
-		buf := make([]byte, 0, len(b))
+		last3 := make([]byte, 3)
 		for {
 			n, err = h.conn.Read(b)
 			if err != nil {
 				return 0, err
 			}
-			i := bytes.Index(append(buf, b...), []byte("\r\n\r\n"))
+			i := bytes.Index(append(last3, b[:n]...), []byte("\r\n\r\n"))
 			if i >= 0 {
-				i = i - len(buf)
-				n = n - i - 4
-				copy(b, b[i+4:])
+				i = i + 1
+				n = n - i
+				copy(b, b[i:])
 				break
 			}
-			copy(buf, b)
+			copyLast3(last3, b[:n])
 		}
 		h.readStart = true
 		return
 	}
 
 	return h.conn.Read(b)
+}
+
+func copyLast3(last3, b []byte) {
+	n := len(b)
+	copy(last3, []byte{0, 0, 0})
+	if n > 0 {
+		last3[2] = b[n-1]
+	}
+	if n-1 > 0 {
+		last3[1] = b[n-2]
+	}
+	if n-2 > 0 {
+		last3[0] = b[n-3]
+	}
 }
 
 // Close closes the connection

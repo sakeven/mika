@@ -1,31 +1,27 @@
 package http
 
 import (
-	// "fmt"
-	// "io"
 	"bufio"
 	"net/http"
 	"net/http/httputil"
 
 	"github.com/sakeven/mika/protocols"
-	"github.com/sakeven/mika/protocols/mika"
+	"github.com/sakeven/mika/protocols/proxy"
 	"github.com/sakeven/mika/utils"
 )
 
+// Relay is controller of http
 type Relay struct {
-	conn     protocols.Protocol
-	cipher   *mika.Crypto
-	ssServer string
-	protocol string
-	closed   bool
+	conn   protocols.Protocol
+	dialer proxy.Dialer
+	closed bool
 }
 
-func NewRelay(conn protocols.Protocol, protocol string, mikaServer string, cipher *mika.Crypto) *Relay {
+// NewRelay creats a new http relay.
+func NewRelay(conn protocols.Protocol, dialer proxy.Dialer) *Relay {
 	return &Relay{
-		conn:     conn,
-		cipher:   cipher,
-		protocol: protocol,
-		ssServer: mikaServer,
+		conn:   conn,
+		dialer: dialer,
 	}
 }
 
@@ -40,7 +36,7 @@ func (h *Relay) Serve() {
 	}
 
 	// TODO Set http protocol flag
-	mikaConn, err := mika.DailWithRawAddrHTTP(h.protocol, h.ssServer, utils.ToAddr(req.URL.Host), h.cipher)
+	mikaConn, err := h.dialer(utils.ToAddr(req.URL.Host))
 	if err != nil {
 		return
 	}
@@ -63,6 +59,7 @@ func (h *Relay) Serve() {
 	h.closed = true
 }
 
+// HTTP200 is http status 200
 var HTTP200 = []byte("HTTP/1.1 200 Connection Established\r\n\r\n")
 
 func _HTTPSHandler(client protocols.Protocol) {

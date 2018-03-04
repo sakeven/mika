@@ -66,6 +66,13 @@ Usage of server:
 ### Configuration via Config File
 See [Configuration via Config File](https://github.com/sakeven/mika/wiki/Configuration-via-Config-File)
 
+## Build
+
+```
+./build.sh
+```
+
+Two binaries `client` and `server` will be installed at `bin/`.
 
 ## TODO
 

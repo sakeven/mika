@@ -3,11 +3,17 @@ package tcp
 import (
 	"net"
 	"time"
+
+	"github.com/sakeven/mika/protocols"
 )
 
 type Conn struct {
 	net.Conn
 	Timeout time.Duration
+}
+
+func Dial(server string) (protocols.Protocol, error) {
+	return net.Dial("tcp", server)
 }
 
 func (c *Conn) Write(b []byte) (int, error) {
