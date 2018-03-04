@@ -10,7 +10,7 @@ import (
 	"github.com/sakeven/mika/utils"
 )
 
-// Mika dails connection between mika server and mika client.
+// Mika dials connection between mika server and mika client.
 type Mika struct {
 	*Conn
 	header     *header
@@ -18,7 +18,7 @@ type Mika struct {
 	readBuf    []byte
 }
 
-// NewMika wraps a new Mika connection.
+// NewMika wraps a connection.
 // Notice, if header is nil, Mika coonection would be on server side otherwise client side.
 func NewMika(conn protocols.Protocol, cipher *Crypto, header *header) (*Mika, error) {
 	ss := &Conn{
@@ -66,14 +66,14 @@ func (c *Mika) Close() error {
 	return c.Conn.Close()
 }
 
-// DailWithRawAddr creates a new connetion
-func DailWithRawAddr(conn protocols.Protocol, rawAddr []byte, cipher *Crypto) (protocols.Protocol, error) {
+// DialWithRawAddr creates a new connetion
+func DialWithRawAddr(conn protocols.Protocol, rawAddr []byte, cipher *Crypto) (protocols.Protocol, error) {
 	header := newHeader(tcpForward, rawAddr)
 	return NewMika(conn, cipher, header)
 }
 
-// DailWithRawAddrHTTP creates a new http proxy connetion
-func DailWithRawAddrHTTP(conn protocols.Protocol, rawAddr []byte, cipher *Crypto) (protocols.Protocol, error) {
+// DialWithRawAddrHTTP creates a new http proxy connetion
+func DialWithRawAddrHTTP(conn protocols.Protocol, rawAddr []byte, cipher *Crypto) (protocols.Protocol, error) {
 	header := newHeader(httpForward, rawAddr)
 	return NewMika(conn, cipher, header)
 }

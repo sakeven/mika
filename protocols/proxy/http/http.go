@@ -17,7 +17,7 @@ type Relay struct {
 	closed bool
 }
 
-// NewRelay creats a new http relay.
+// NewRelay creates a new http relay.
 func NewRelay(conn protocols.Protocol, dialer proxy.Dialer) *Relay {
 	return &Relay{
 		conn:   conn,
@@ -25,9 +25,8 @@ func NewRelay(conn protocols.Protocol, dialer proxy.Dialer) *Relay {
 	}
 }
 
-// Serve parse data and then send to mika server.
+// Serve parses data and uses the connection dialer creates to pipe.
 func (h *Relay) Serve() {
-
 	bf := bufio.NewReader(h.conn)
 	req, err := http.ReadRequest(bf)
 	if err != nil {
@@ -35,15 +34,14 @@ func (h *Relay) Serve() {
 		return
 	}
 
-	// TODO Set http protocol flag
-	mikaConn, err := h.dialer(utils.ToAddr(req.URL.Host))
+	conn, err := h.dialer(utils.ToAddr(req.URL.Host))
 	if err != nil {
 		return
 	}
 
 	defer func() {
 		if !h.closed {
-			err := mikaConn.Close()
+			err := conn.Close()
 			utils.Errorf("Close connection error %v\n", err)
 		}
 	}()
@@ -51,11 +49,11 @@ func (h *Relay) Serve() {
 	if req.Method == "CONNECT" {
 		_HTTPSHandler(h.conn)
 	} else {
-		_HTTPHandler(mikaConn, req)
+		_HTTPHandler(conn, req)
 	}
 
-	go protocols.Pipe(h.conn, mikaConn)
-	protocols.Pipe(mikaConn, h.conn)
+	go protocols.Pipe(h.conn, conn)
+	protocols.Pipe(conn, h.conn)
 	h.closed = true
 }
 

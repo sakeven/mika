@@ -69,7 +69,7 @@ func (s *server) HTTPDailer() func(addr []byte) (protocols.Protocol, error) {
 		if err != nil {
 			return nil, err
 		}
-		return mika.DailWithRawAddrHTTP(conn, addr, s.cg.NewCrypto())
+		return mika.DialWithRawAddrHTTP(conn, addr, s.cg.NewCrypto())
 	}
 }
 
@@ -79,7 +79,7 @@ func (s *server) Dailer() func(addr []byte) (protocols.Protocol, error) {
 		if err != nil {
 			return nil, err
 		}
-		return mika.DailWithRawAddr(conn, addr, s.cg.NewCrypto())
+		return mika.DialWithRawAddr(conn, addr, s.cg.NewCrypto())
 	}
 }
 

@@ -56,7 +56,7 @@ func listen(serverInfo *utils.ServerConf) {
 	}
 }
 
-func listenKcp(serverInfo *utils.ServerConf) {
+func listenKCP(serverInfo *utils.ServerConf) {
 	nl, err := kcp.ListenWithOptions(fmt.Sprintf("%s:%d", serverInfo.Address, serverInfo.Port), nil, 10, 3)
 	if err != nil {
 		utils.Fatalf("Create server error %s", err)
@@ -98,7 +98,7 @@ func main() {
 		}
 
 		if serverInfo.Protocol == protocols.KCP {
-			listenKcp(serverInfo)
+			listenKCP(serverInfo)
 		} else {
 			listen(serverInfo)
 		}
