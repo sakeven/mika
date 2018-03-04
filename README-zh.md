@@ -1,28 +1,26 @@
 # Mika
-A Faster Secure Proxy :rocket:
+ 一个简单快速的安全代理:rocket:
 
-[中文指南](README-zh.md)
+## 特性
 
-## Feature
+1. 支持本地 socks5 代理 TCP 流量
+2. 支持本地 HTTP 代理
+3. 支持无特征流量加密
+4. 支持通过 HTTP 流量混淆
 
-1. Support proxy TCP data by socks5 at local.
-2. Support HTTP/HTTPS proxy.
-3. Transfer speed is super fast.
-4. Support HTTP obfs.
+## 目标
 
-## Goals
+1. 更少的协议特征
+2. 足够安全保护你的因特网流量
+3. 传输速度够快
+4. 任何新的特性或者功能增强不能破坏以上目标
 
-1. Less protocol characteristics.
-2. Enough security to protect your Internet traffic.
-3. Transfer speed should be super fast.
-4. Any enhancement or feature shoudn't break above goals.
+## Mika 协议说明
 
-## Mika Protocol Spec
+见 [Mika Protocol Spec](https://github.com/sakeven/mika/wiki/Mika-Protocol-Spec)
 
-See [Mika Protocol Spec](https://github.com/sakeven/mika/wiki/Mika-Protocol-Spec)
-
-## Configuration
-### Client
+## 配置
+### 客户端
 ```
 Usage of client:
   --help
@@ -44,7 +42,7 @@ Usage of client:
   -t int
     	timeout in seconds (default 300)
 ```
-### Server
+### 服务端
 
 ```
 Usage of server:
@@ -63,16 +61,16 @@ Usage of server:
   -t int
     	timeout in seconds (default 300)
 ```
-### Configuration via Config File
-See [Configuration via Config File](https://github.com/sakeven/mika/wiki/Configuration-via-Config-File)
+### 通过配置文件配置
+见 [Configuration via Config File](https://github.com/sakeven/mika/wiki/Configuration-via-Config-File)
 
-## Build
+## 构建
 
 ```
 ./build.sh
 ```
 
-Two binaries `client` and `server` will be installed at `bin/`.
+两个二进制程序 `client` 和 `server` 将会被安装在代码根目录的 `bin/` 下。
 
 ## LICENSE
 
