@@ -5,15 +5,12 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io"
-	"net"
 
 	"github.com/sakeven/mika/protocols"
 	"github.com/sakeven/mika/utils"
-
-	"github.com/xtaci/kcp-go"
 )
 
-// Mika dails connection between mika server and mika client.
+// Mika dials connection between mika server and mika client.
 type Mika struct {
 	*Conn
 	header     *header
@@ -21,7 +18,7 @@ type Mika struct {
 	readBuf    []byte
 }
 
-// NewMika wraps a new Mika connection.
+// NewMika wraps a connection.
 // Notice, if header is nil, Mika coonection would be on server side otherwise client side.
 func NewMika(conn protocols.Protocol, cipher *Crypto, header *header) (*Mika, error) {
 	ss := &Conn{
@@ -53,6 +50,7 @@ func NewMika(conn protocols.Protocol, cipher *Crypto, header *header) (*Mika, er
 	} else {
 		// On client side, send header as quickly.
 		iv := cipher.initEncStream()
+		utils.Debugf("iv %#v", iv)
 		ss.write(iv)
 		data := header.Bytes(cipher.iv, cipher.key)
 		ss.Write(data)
@@ -68,56 +66,14 @@ func (c *Mika) Close() error {
 	return c.Conn.Close()
 }
 
-func DailWithRawAddr(network string, server string, rawAddr []byte, cipher *Crypto) (protocols.Protocol, error) {
-	var conn net.Conn
-	var err error
-	if network == protocols.KCP {
-		// TODO refactor
-		var kcpConn *kcp.UDPSession
-		kcpConn, err = kcp.DialWithOptions(server, nil, 10, 3)
-		if err != nil {
-			return nil, err
-		}
-
-		kcpConn.SetStreamMode(true)
-		kcpConn.SetNoDelay(1, 20, 2, 1)
-		kcpConn.SetACKNoDelay(true)
-		kcpConn.SetWindowSize(128, 1024)
-		conn = kcpConn
-	} else {
-		conn, err = net.Dial(network, server)
-		if err != nil {
-			return nil, err
-		}
-	}
-
+// DialWithRawAddr creates a new connetion
+func DialWithRawAddr(conn protocols.Protocol, rawAddr []byte, cipher *Crypto) (protocols.Protocol, error) {
 	header := newHeader(tcpForward, rawAddr)
 	return NewMika(conn, cipher, header)
 }
 
-func DailWithRawAddrHTTP(network string, server string, rawAddr []byte, cipher *Crypto) (protocols.Protocol, error) {
-	var conn net.Conn
-	var err error
-	if network == protocols.KCP {
-		// TODO refactor
-		var kcpConn *kcp.UDPSession
-		kcpConn, err = kcp.DialWithOptions(server, nil, 10, 3)
-		if err != nil {
-			return nil, err
-		}
-
-		kcpConn.SetStreamMode(true)
-		kcpConn.SetNoDelay(1, 20, 2, 1)
-		kcpConn.SetACKNoDelay(true)
-		kcpConn.SetWindowSize(128, 1024)
-		conn = kcpConn
-	} else {
-		conn, err = net.Dial(network, server)
-		if err != nil {
-			return nil, err
-		}
-	}
-
+// DialWithRawAddrHTTP creates a new http proxy connetion
+func DialWithRawAddrHTTP(conn protocols.Protocol, rawAddr []byte, cipher *Crypto) (protocols.Protocol, error) {
 	header := newHeader(httpForward, rawAddr)
 	return NewMika(conn, cipher, header)
 }

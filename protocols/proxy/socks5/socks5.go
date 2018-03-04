@@ -6,7 +6,7 @@ import (
 	"io"
 
 	"github.com/sakeven/mika/protocols"
-	"github.com/sakeven/mika/protocols/mika"
+	"github.com/sakeven/mika/protocols/proxy"
 	"github.com/sakeven/mika/utils"
 )
 
@@ -16,20 +16,16 @@ const (
 
 // TCPRelay as a socks5 server and mika client.
 type TCPRelay struct {
-	conn     protocols.Protocol
-	cipher   *mika.Crypto
-	ssServer string
-	protocol string
-	closed   bool
+	conn   protocols.Protocol
+	closed bool
+	dialer proxy.Dialer
 }
 
 // NewTCPRelay creates a new Socks5 TCPRelay.
-func NewTCPRelay(conn protocols.Protocol, protocol string, mikaServer string, cipher *mika.Crypto) *TCPRelay {
+func NewTCPRelay(conn protocols.Protocol, dialer proxy.Dialer) *TCPRelay {
 	return &TCPRelay{
-		conn:     conn,
-		cipher:   cipher,
-		ssServer: mikaServer,
-		protocol: protocol,
+		conn:   conn,
+		dialer: dialer,
 	}
 }
 
@@ -197,12 +193,11 @@ func (s *TCPRelay) reply() (err error) {
 	return
 }
 
-// connect handles CONNECT cmd
-// Here is a bit magic. It acts as a mika client that redirects conntion to mika server.
+// connect handles CONNECT cmd.
+// 1. use dialer to create a connection between local and rawAddr.
+// 2. pipe local and rawAddr
 func (s *TCPRelay) connect(rawAddr []byte) (err error) {
-
-	// TODO Dail("tcp", rawAdd) would be more reasonable.
-	mikaConn, err := mika.DailWithRawAddr(s.protocol, s.ssServer, rawAddr, s.cipher)
+	conn, err := s.dialer(rawAddr)
 	if err != nil {
 		utils.Errorf("%s", err)
 		return
@@ -210,13 +205,13 @@ func (s *TCPRelay) connect(rawAddr []byte) (err error) {
 
 	defer func() {
 		if !s.closed {
-			err := mikaConn.Close()
+			err := conn.Close()
 			utils.Errorf("Close connection error %v\n", err)
 		}
 	}()
 
-	go protocols.Pipe(s.conn, mikaConn)
-	protocols.Pipe(mikaConn, s.conn)
+	go protocols.Pipe(s.conn, conn)
+	protocols.Pipe(conn, s.conn)
 	s.closed = true
 	return
 }

@@ -7,6 +7,7 @@ import (
 
 	"github.com/sakeven/mika/protocols"
 	"github.com/sakeven/mika/protocols/mika"
+	"github.com/sakeven/mika/protocols/transfer/obfs"
 	"github.com/sakeven/mika/protocols/transfer/tcp"
 	"github.com/sakeven/mika/utils"
 
@@ -42,13 +43,20 @@ func listen(serverInfo *utils.ServerConf) {
 		}
 
 		go func() {
-			tcpConn := &tcp.Conn{c, time.Duration(serverInfo.Timeout) * time.Second}
+			var tcpConn protocols.Protocol = &tcp.Conn{
+				Conn:    c,
+				Timeout: time.Duration(serverInfo.Timeout) * time.Second,
+			}
+			if serverInfo.Protocol == protocols.ObfsHTTP {
+				utils.Debugf("use protocol %s", serverInfo.Protocol)
+				tcpConn = obfs.NewHTTP(tcpConn, true)
+			}
 			handle(tcpConn, cg)
 		}()
 	}
 }
 
-func listenKcp(serverInfo *utils.ServerConf) {
+func listenKCP(serverInfo *utils.ServerConf) {
 	nl, err := kcp.ListenWithOptions(fmt.Sprintf("%s:%d", serverInfo.Address, serverInfo.Port), nil, 10, 3)
 	if err != nil {
 		utils.Fatalf("Create server error %s", err)
@@ -69,14 +77,18 @@ func listenKcp(serverInfo *utils.ServerConf) {
 			conn.SetNoDelay(1, 20, 2, 1)
 			conn.SetACKNoDelay(true)
 			conn.SetWindowSize(1024, 1024)
-			kcpConn := &tcp.Conn{conn, time.Duration(serverInfo.Timeout) * time.Second}
+			kcpConn := &tcp.Conn{
+				Conn:    conn,
+				Timeout: time.Duration(serverInfo.Timeout) * time.Second,
+			}
 			handle(kcpConn, cg)
 		}()
 	}
 }
 
 func main() {
-	conf = utils.ParseSeverConf()
+	conf = utils.ParseConf()
+	utils.SetLevel(utils.DebugLevel)
 
 	//TODO check conf
 
@@ -86,7 +98,7 @@ func main() {
 		}
 
 		if serverInfo.Protocol == protocols.KCP {
-			listenKcp(serverInfo)
+			listenKCP(serverInfo)
 		} else {
 			listen(serverInfo)
 		}

@@ -7,6 +7,7 @@ import (
 	"os"
 )
 
+// ServerConf stores a configuration of mika server.
 type ServerConf struct {
 	Address  string `json:"address"`
 	Port     int    `json:"port"`
@@ -14,19 +15,22 @@ type ServerConf struct {
 	Password string `json:"password"`
 	Method   string `json:"method"`
 	Protocol string `json:"protocol"`
+	ObfsURI  string `json:"obfs-http-uri"`
 }
 
+// LocalConf stores a configuration of mika socks5 client.
 type LocalConf struct {
 	Address  string `json:"address"`
 	Port     int    `json:"port"`
 	Protocol string `json:"protocol"`
 }
 
+// Conf stores a configuration of mika client.
 type Conf struct {
 	Server      []*ServerConf `json:"server"`
 	Local       []*LocalConf  `json:"local"`
 	Timeout     int64         `json:"timeout"`
-	TcpFastOpen bool          `json:"tcp_fastopen"`
+	TCPFastOpen bool          `json:"tcp_fastopen"`
 }
 
 func newConf() *Conf {
@@ -38,7 +42,8 @@ func newConf() *Conf {
 	return c
 }
 
-func ParseSeverConf() *Conf {
+// ParseConf parses the configuration
+func ParseConf() *Conf {
 	var confFile string
 	var conf = newConf()
 	var help bool

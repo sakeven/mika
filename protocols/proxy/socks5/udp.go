@@ -1,85 +1,84 @@
 package socks5
 
-import (
-	"fmt"
-	"io"
-	"net"
+// import (
+// 	"fmt"
+// 	"io"
+// 	"net"
 
-	"github.com/sakeven/mika/protocols"
-	"github.com/sakeven/mika/protocols/mika"
-	"github.com/sakeven/mika/utils"
-)
+// 	"github.com/sakeven/mika/protocols"
+// 	"github.com/sakeven/mika/protocols/mika"
+// 	"github.com/sakeven/mika/utils"
+// )
 
-type UDPRelay struct {
-	conn net.Conn
-}
+// type UDPRelay struct {
+// 	conn net.Conn
+// }
 
-func NewUDPRelay(conn net.Conn) *UDPRelay {
-	return &UDPRelay{
-		conn: conn,
-	}
-}
+// func NewUDPRelay(conn net.Conn) *UDPRelay {
+// 	return &UDPRelay{
+// 		conn: conn,
+// 	}
+// }
 
-func (s *UDPRelay) Serve() (err error) {
-	defer s.conn.Close()
+// func (s *UDPRelay) Serve() (err error) {
+// 	defer s.conn.Close()
 
-	rawAddr, _, err := s.parseRequest()
+// 	rawAddr, _, err := s.parseRequest()
 
-	s.relay(rawAddr)
-	return
-}
+// 	s.relay(rawAddr)
+// 	return
+// }
 
-//  +----+------+------+----------+----------+----------+
-//  |RSV | FRAG | ATYP | DST.ADDR | DST.PORT |   DATA   |
-//  +----+------+------+----------+----------+----------+
-//  | 2  |  1   |  1   | Variable |    2     | Variable |
-//  +----+------+------+----------+----------+----------+
-// The fields in the UDP request header are:
-//      o  RSV  Reserved X’0000’
-//      o  FRAG    Current fragment number
-//      o  ATYP    address type of following addresses:
-//         o  IP V4 address: X’01’
-//         o  DOMAINNAME: X’03’
-//         o  IP V6 address: X’04’
-// o  DST.ADDR	desired destination address
-// o  DST.PORT	desired destination port
-// o  DATA	user data
-func (s *UDPRelay) getFrag() (rag byte, err error) {
-	raw := make([]byte, 3)
-	if _, err = io.ReadFull(s.conn, raw); err != nil {
-		return
-	}
+// //  +----+------+------+----------+----------+----------+
+// //  |RSV | FRAG | ATYP | DST.ADDR | DST.PORT |   DATA   |
+// //  +----+------+------+----------+----------+----------+
+// //  | 2  |  1   |  1   | Variable |    2     | Variable |
+// //  +----+------+------+----------+----------+----------+
+// // The fields in the UDP request header are:
+// //      o  RSV  Reserved X’0000’
+// //      o  FRAG    Current fragment number
+// //      o  ATYP    address type of following addresses:
+// //         o  IP V4 address: X’01’
+// //         o  DOMAINNAME: X’03’
+// //         o  IP V6 address: X’04’
+// // o  DST.ADDR	desired destination address
+// // o  DST.PORT	desired destination port
+// // o  DATA	user data
+// func (s *UDPRelay) getFrag() (rag byte, err error) {
+// 	raw := make([]byte, 3)
+// 	if _, err = io.ReadFull(s.conn, raw); err != nil {
+// 		return
+// 	}
 
-	return raw[2], nil
-}
+// 	return raw[2], nil
+// }
 
-func (s *UDPRelay) parseRequest() (rawAddr []byte, addr string, err error) {
+// func (s *UDPRelay) parseRequest() (rawAddr []byte, addr string, err error) {
+// 	frag, err := s.getFrag()
+// 	if err != nil {
+// 		return
+// 	}
 
-	frag, err := s.getFrag()
-	if err != nil {
-		return
-	}
+// 	// An implementation that does not support fragmentation
+// 	// MUST drop any datagram whose FRAG field is other than X’00’.
+// 	if frag != 0x00 {
+// 		return nil, "", fmt.Errorf("frag %d is not 0, drop it", frag)
+// 	}
 
-	// An implementation that does not support fragmentation
-	// MUST drop any datagram whose FRAG field is other than X’00’.
-	if frag != 0x00 {
-		return nil, "", fmt.Errorf("frag %d is not 0, drop it", frag)
-	}
+// 	return utils.GetAddress(s.conn)
+// }
 
-	return utils.GetAddress(s.conn)
-}
+// // relay udp data
+// func (s *UDPRelay) relay(rawAddr []byte) (err error) {
+// 	cg := mika.NewCryptoGenerator("aes-128-cfb", "123456")
+// 	cipher := cg.NewCrypto()
+// 	mikaConn, err := mika.DailWithRawAddr("udp", ":8080", rawAddr, cipher)
+// 	if err != nil {
+// 		return
+// 	}
+// 	defer mikaConn.Close()
 
-// relay udp data
-func (s *UDPRelay) relay(rawAddr []byte) (err error) {
-	cg := mika.NewCryptoGenerator("aes-128-cfb", "123456")
-	cipher := cg.NewCrypto()
-	mikaConn, err := mika.DailWithRawAddr("udp", ":8080", rawAddr, cipher)
-	if err != nil {
-		return
-	}
-	defer mikaConn.Close()
-
-	go protocols.Pipe(s.conn, mikaConn)
-	protocols.Pipe(mikaConn, s.conn)
-	return
-}
+// 	go protocols.Pipe(s.conn, mikaConn)
+// 	protocols.Pipe(mikaConn, s.conn)
+// 	return
+// }
